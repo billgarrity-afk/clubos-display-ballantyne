@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis Court Display — Ballantyne CC</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:         #0B1B2B;
+    --navy-mid:     #0F2338;
+    --navy-light:   #162D44;
+    --navy-card:    #1A3350;
+    --gold:         #C9A84C;
+    --gold-dim:     rgba(201,168,76,0.18);
+    --gold-light:   rgba(201,168,76,0.65);
+    --white:        #F5F0E8;
+    --white-dim:    rgba(245,240,232,0.55);
+    --white-faint:  rgba(245,240,232,0.16);
+    --green:        #3A7D52;
+    --green-dim:    rgba(58,125,82,0.18);
+    --red:          #C0392B;
+    --red-dim:      rgba(192,57,43,0.18);
+    --amber:        #D4A017;
+    --amber-dim:    rgba(212,160,23,0.18);
+    --separator:    rgba(201,168,76,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    color: var(--white);
+  }
+
+  /* grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.45;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    display: grid;
+    grid-template-rows: 90px 1fr 58px;
+    height: 1080px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), rgba(58,125,82,0.8), var(--gold), transparent);
+    opacity: 0.6;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .crest {
+    width: 54px; height: 54px;
+    border: 1.5px solid rgba(201,168,76,0.4);
+    border-radius: 50%;
+    background: var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .club-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .club-sub {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .header-center {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    text-align: center;
+  }
+  .display-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 3px;
+  }
+  .display-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 20px;
+  }
+  .stat {
+    text-align: center;
+    background: var(--navy-card);
+    border: 1px solid var(--separator);
+    border-radius: 6px;
+    padding: 8px 16px;
+    min-width: 72px;
+  }
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    color: var(--white);
+    line-height: 1;
+  }
+  .stat-val.available { color: var(--green); }
+  .stat-val.booked    { color: var(--gold); }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    margin-top: 3px;
+  }
+  .time-block {
+    border-left: 1px solid var(--separator);
+    padding-left: 24px;
+    text-align: right;
+  }
+  .live-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    color: var(--white);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .live-date {
+    font-size: 11px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+  }
+
+  /* ── NOTICE STRIP ── */
+  .notice-strip {
+    background: var(--amber-dim);
+    border-bottom: 1px solid rgba(212,160,23,0.25);
+    padding: 6px 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .notice-strip.hidden { display: none; }
+
+  /* ── COURT GRID ── */
+  .courts-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 14px 0 0;
+  }
+
+  /* Column headers */
+  .courts-header {
+    display: grid;
+    grid-template-columns: 76px repeat(7, 1fr);
+    gap: 4px;
+    padding: 0 44px 10px;
+    flex-shrink: 0;
+  }
+  .court-label {
+    background: var(--navy-card);
+    border: 1px solid var(--separator);
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: 4px;
+  }
+  .court-label-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+  .court-label-sub {
+    font-size: 10px;
+    color: var(--white-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* NOW indicator row */
+  .now-row {
+    display: grid;
+    grid-template-columns: 76px repeat(7, 1fr);
+    gap: 4px;
+    padding: 0 44px 4px;
+    flex-shrink: 0;
+  }
+  .now-indicator {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .now-line {
+    flex: 1;
+    height: 1px;
+    background: var(--green);
+    opacity: 0.6;
+  }
+  .now-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.4; transform:scale(0.6); }
+  }
+
+  /* Scrolling slots */
+  .slots-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    padding: 0 44px;
+  }
+  .slots-inner {
+    position: absolute;
+    width: calc(100% - 88px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: courtScroll 55s linear infinite;
+  }
+  @keyframes courtScroll {
+    0%   { transform: translateY(0); }
+    45%  { transform: translateY(var(--scroll-end, -35%)); }
+    50%  { transform: translateY(var(--scroll-end, -35%)); }
+    95%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
+  }
+
+  .time-row {
+    display: grid;
+    grid-template-columns: 76px repeat(7, 1fr);
+    gap: 4px;
+  }
+  .time-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(245,240,232,0.3);
+    min-height: 52px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── SLOTS ── */
+  .slot {
+    min-height: 52px;
+    border-radius: 3px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .slot-name   { font-weight: 600; line-height: 1.25; font-size: 12px; }
+  .slot-detail { font-size: 10px; margin-top: 2px; opacity: 0.75; letter-spacing: 0.3px; }
+
+  .slot.empty {
+    background: transparent;
+    border: 1px dashed rgba(245,240,232,0.06);
+  }
+  .slot.available {
+    background: var(--green-dim);
+    border: 1px solid rgba(58,125,82,0.3);
+    color: #6FCF97;
+  }
+  .slot.available .slot-name { color: #6FCF97; }
+
+  .slot.booked {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--gold-light);
+  }
+  .slot.booked .slot-name { color: var(--gold); }
+
+  .slot.clinic {
+    background: rgba(100,70,200,0.15);
+    border: 1px solid rgba(100,70,200,0.3);
+    color: rgba(180,150,255,0.9);
+  }
+  .slot.clinic .slot-name { color: rgba(180,150,255,1); }
+
+  .slot.closed {
+    background: var(--red-dim);
+    border: 1px solid rgba(192,57,43,0.25);
+    color: rgba(235,120,110,0.8);
+    text-align: center;
+  }
+  .slot.closed .slot-name { font-size: 11px; color: rgba(235,120,110,0.9); }
+
+  /* spans across multiple time rows */
+  .slot.span-2 { min-height: 108px; }
+  .slot.span-3 { min-height: 164px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy-mid);
+    border-top: 1px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    position: relative;
+  }
+  footer::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.35;
+  }
+  .footer-legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .dot-available { background: var(--green); }
+  .dot-booked    { background: var(--gold); }
+  .dot-clinic    { background: rgba(140,110,240,0.9); }
+  .dot-closed    { background: var(--red); }
+  .dot-empty     { border: 1px dashed rgba(245,240,232,0.2); background: transparent; }
+
+  .footer-reserve {
+    font-size: 13px;
+    color: var(--white-dim);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+  .footer-reserve strong { color: var(--gold); }
+
+  .footer-brand {
+    font-size: 11px;
+    color: rgba(245,240,232,0.25);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+  .footer-brand span { color: var(--gold); font-weight: 600; }
+
+  /* entrance */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .wrapper { animation: fadeSlideUp 0.6s ease both; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="crest">🎾</div>
+      <div>
+        <div class="club-name">Ballantyne Country Club</div>
+        <div class="club-sub">Tennis Complex — Court Availability</div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="display-label">Today's Schedule</div>
+      <div class="display-title" id="headerDate">Saturday, April 5</div>
+    </div>
+    <div class="header-right">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-val available" id="availCount">—</div>
+          <div class="stat-label">Available</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val booked" id="bookedCount">—</div>
+          <div class="stat-label">Reserved</div>
+        </div>
+      </div>
+      <div class="time-block">
+        <div class="live-time" id="clock">8:00 AM</div>
+        <div class="live-date" id="clockDate">Loading...</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- COURTS -->
+  <div class="courts-area">
+
+    <!-- Column headers -->
+    <div class="courts-header">
+      <div></div>
+      <div class="court-label">
+        <div class="court-label-name">Court 1</div>
+        <div class="court-label-sub">Clay · Singles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 2</div>
+        <div class="court-label-sub">Clay · Singles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 3</div>
+        <div class="court-label-sub">Clay · Singles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 4</div>
+        <div class="court-label-sub">Clay · Doubles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 5</div>
+        <div class="court-label-sub">Clay · Doubles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 6</div>
+        <div class="court-label-sub">Hard · Doubles</div>
+      </div>
+      <div class="court-label">
+        <div class="court-label-name">Court 7</div>
+        <div class="court-label-sub">Hard · Doubles</div>
+      </div>
+    </div>
+
+    <!-- NOW line -->
+    <div class="now-row" id="nowRow" style="display:none">
+      <div class="now-indicator">
+        <div class="now-dot"></div>
+        <span>Now</span>
+        <div class="now-line"></div>
+      </div>
+    </div>
+
+    <!-- Scrolling schedule -->
+    <div class="slots-wrapper">
+      <div class="slots-inner" id="slotsInner">
+
+        <div class="time-row">
+          <div class="time-cell">8:00 AM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">8:30 AM</div>
+          <div class="slot booked"><span class="slot-name">Macrone / Ellis</span><span class="slot-detail">8:30–10:00 AM</span></div>
+          <div class="slot booked"><span class="slot-name">Bonakdar / Lee</span><span class="slot-detail">8:30–10:00 AM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">Instructor: Martinez</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">Instructor: Martinez</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">9:00 AM</div>
+          <div class="slot booked"><span class="slot-name">Macrone / Ellis</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Bonakdar / Lee</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Thompson / Park</span><span class="slot-detail">9:00–10:30 AM</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Rivera / Walsh</span><span class="slot-detail">9:00–10:00 AM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">9:30 AM</div>
+          <div class="slot booked"><span class="slot-name">Macrone / Ellis</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Bonakdar / Lee</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Thompson / Park</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Ladies Clinic</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Rivera / Walsh</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Chen / Patel</span><span class="slot-detail">9:30–11:00 AM</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">10:00 AM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Thompson / Park</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">Charlotte Ladies League</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">Charlotte Ladies League</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Chen / Patel</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">10:30 AM</div>
+          <div class="slot booked"><span class="slot-name">Kim / Foster</span><span class="slot-detail">10:30 AM–12:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Nguyen / Brooks</span><span class="slot-detail">10:30 AM–12:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">11:00 AM</div>
+          <div class="slot booked"><span class="slot-name">Kim / Foster</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Wallace / Grant</span><span class="slot-detail">11:00 AM–12:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">O'Brien / Stern</span><span class="slot-detail">11:00 AM–12:00 PM</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Interclub Match</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Nguyen / Brooks</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Dumont / Clarke</span><span class="slot-detail">11:00 AM–12:30 PM</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">11:30 AM</div>
+          <div class="slot booked"><span class="slot-name">Kim / Foster</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Wallace / Grant</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">O'Brien / Stern</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Dumont / Clarke</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">12:00 PM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Wallace / Grant</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Patel / Oduya</span><span class="slot-detail">12:00–1:30 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Singh / Tanaka</span><span class="slot-detail">12:00–1:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Dumont / Clarke</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">12:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Morgan / Reed</span><span class="slot-detail">12:30–2:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Castillo / Yuen</span><span class="slot-detail">12:30–2:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Patel / Oduya</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Hart / Coleman</span><span class="slot-detail">12:30–2:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Singh / Tanaka</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">1:00 PM</div>
+          <div class="slot booked"><span class="slot-name">Morgan / Reed</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Junior Academy</span><span class="slot-detail">Ages 10–14 · Coach Rivera</span></div>
+          <div class="slot booked"><span class="slot-name">Castillo / Yuen</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Patel / Oduya</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Hart / Coleman</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Andrews / Scott</span><span class="slot-detail">1:00–2:30 PM</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">1:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Morgan / Reed</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Junior Academy</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Castillo / Yuen</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Fitzgerald / Blake</span><span class="slot-detail">1:30–3:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Andrews / Scott</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">2:00 PM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot clinic"><span class="slot-name">Junior Academy</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Lawson / Petrov</span><span class="slot-detail">2:00–3:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Nakamura / Vega</span><span class="slot-detail">2:00–3:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Fitzgerald / Blake</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Andrews / Scott</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">2:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Elliott / Morse</span><span class="slot-detail">2:30–4:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Sterling / Cross</span><span class="slot-detail">2:30–4:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Lawson / Petrov</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Nakamura / Vega</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Fitzgerald / Blake</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">3:00 PM</div>
+          <div class="slot booked"><span class="slot-name">Elliott / Morse</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Davidson / Hunt</span><span class="slot-detail">3:00–4:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Sterling / Cross</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Lawson / Petrov</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Nakamura / Vega</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Burke / Howell</span><span class="slot-detail">3:00–4:30 PM</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">3:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Elliott / Morse</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Davidson / Hunt</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Sterling / Cross</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Kowalski / Flynn</span><span class="slot-detail">3:30–5:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Burke / Howell</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">4:00 PM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Davidson / Hunt</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Murphy / Chen</span><span class="slot-detail">4:00–5:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Santos / Webb</span><span class="slot-detail">4:00–5:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Kowalski / Flynn</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Burke / Howell</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">4:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Marsh / Ingram</span><span class="slot-detail">4:30–6:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Reyes / Hammond</span><span class="slot-detail">4:30–6:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Murphy / Chen</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Santos / Webb</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Kowalski / Flynn</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">5:00 PM</div>
+          <div class="slot booked"><span class="slot-name">Marsh / Ingram</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Mixed Doubles Social</span><span class="slot-detail">Open to all members</span></div>
+          <div class="slot booked"><span class="slot-name">Reyes / Hammond</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Murphy / Chen</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Santos / Webb</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Yamamoto / Price</span><span class="slot-detail">5:00–6:30 PM</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">5:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Marsh / Ingram</span><span class="slot-detail">cont.</span></div>
+          <div class="slot clinic"><span class="slot-name">Mixed Doubles Social</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Reyes / Hammond</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Hoffman / Lang</span><span class="slot-detail">5:30–7:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Yamamoto / Price</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">6:00 PM</div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot clinic"><span class="slot-name">Mixed Doubles Social</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Evans / Hall</span><span class="slot-detail">6:00–7:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">King / Young</span><span class="slot-detail">6:00–7:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Hoffman / Lang</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Yamamoto / Price</span><span class="slot-detail">cont.</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">6:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Perez / Dunn</span><span class="slot-detail">6:30–8:00 PM</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot booked"><span class="slot-name">Harrington / Fox</span><span class="slot-detail">6:30–8:00 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Evans / Hall</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">King / Young</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Hoffman / Lang</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">7:00 PM</div>
+          <div class="slot booked"><span class="slot-name">Perez / Dunn</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Brennan / Park</span><span class="slot-detail">7:00–8:30 PM</span></div>
+          <div class="slot booked"><span class="slot-name">Harrington / Fox</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Evans / Hall</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">King / Young</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">7:30 PM</div>
+          <div class="slot booked"><span class="slot-name">Perez / Dunn</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Brennan / Park</span><span class="slot-detail">cont.</span></div>
+          <div class="slot booked"><span class="slot-name">Harrington / Fox</span><span class="slot-detail">cont.</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+          <div class="slot available"><span class="slot-name">Available</span></div>
+        </div>
+
+        <div class="time-row">
+          <div class="time-cell">8:00 PM</div>
+          <div class="slot empty"></div>
+          <div class="slot empty"></div>
+          <div class="slot empty"></div>
+          <div class="slot empty"></div>
+          <div class="slot empty"></div>
+          <div class="slot closed"><span class="slot-name">Courts Close 8 PM</span></div>
+          <div class="slot closed"><span class="slot-name">Courts Close 8 PM</span></div>
+        </div>
+
+      </div><!-- /slots-inner -->
+    </div><!-- /slots-wrapper -->
+  </div><!-- /courts-area -->
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-legend">
+      <div class="legend-item"><div class="legend-dot dot-available"></div>Available</div>
+      <div class="legend-item"><div class="legend-dot dot-booked"></div>Reserved</div>
+      <div class="legend-item"><div class="legend-dot dot-clinic"></div>Clinic / Event</div>
+      <div class="legend-item"><div class="legend-dot dot-closed"></div>Court Closed</div>
+      <div class="legend-item"><div class="legend-dot dot-empty"></div>Not Yet Open</div>
+    </div>
+    <div class="footer-reserve">
+      Reserve a court: <strong>Pro Shop ext. 103</strong> &nbsp;·&nbsp; Walk-on available when courts show Available
+    </div>
+    <div class="footer-brand">Powered by <span>ClubOS</span></div>
+  </footer>
+
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes().toString().padStart(2,'0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    document.getElementById('clock').textContent = `${h12}:${m} ${ampm}`;
+    const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('clockDate').textContent =
+      `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+    document.getElementById('headerDate').textContent =
+      `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Show NOW line during operating hours
+  const h = new Date().getHours();
+  if (h >= 8 && h < 20) {
+    document.getElementById('nowRow').style.display = 'grid';
+  }
+
+  // Live availability count
+  window.addEventListener('load', () => {
+    const available = document.querySelectorAll('.slot.available').length;
+    const booked    = document.querySelectorAll('.slot.booked').length;
+    document.getElementById('availCount').textContent = available;
+    document.getElementById('bookedCount').textContent = booked;
+
+    // Auto-scroll distance
+    const inner   = document.getElementById('slotsInner');
+    const wrapper = inner.parentElement;
+    setTimeout(() => {
+      const overflow = inner.scrollHeight - wrapper.clientHeight;
+      if (overflow > 0) {
+        const pct = (overflow / inner.scrollHeight * 100).toFixed(1);
+        inner.style.setProperty('--scroll-end', `-${pct}%`);
+      }
+    }, 300);
+  });
+</script>
+</body>
+</html>
