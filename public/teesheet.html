@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tee Sheet Display — ClubhouseCTV</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:           #0D1F17;
+    --bg-mid:       #132A1E;
+    --bg-panel:     #0A1A12;
+    --bg-card:      #162B1F;
+    --green-bright: #3D7A52;
+    --green-glow:   #4E9966;
+    --gold:         #C9A84C;
+    --gold-dim:     #8B6B28;
+    --gold-light:   rgba(201,168,76,0.12);
+    --white:        #F5F0E8;
+    --white-dim:    rgba(245,240,232,0.55);
+    --white-faint:  rgba(245,240,232,0.18);
+    --red:          #E05252;
+    --separator:    rgba(201,168,76,0.18);
+    --on-tee-glow:  rgba(78,153,102,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    color: var(--white);
+  }
+
+  /* subtle grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────── */
+  .display-wrapper {
+    display: grid;
+    grid-template-rows: 96px 1fr 68px;
+    height: 1080px;
+    width: 1920px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  .header {
+    background: var(--bg-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 52px;
+    border-bottom: 1px solid var(--separator);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--green-glow), var(--gold), transparent);
+    opacity: 0.7;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .club-crest {
+    width: 58px; height: 58px;
+    border: 1.5px solid var(--gold-dim);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--gold-light);
+    position: relative;
+  }
+  .club-crest::before {
+    content: '⛳';
+    font-size: 22px;
+  }
+
+  .club-info {}
+  .club-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+  .club-sub {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .tee-sheet-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .tee-sheet-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    color: var(--white);
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .weather-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .weather-temp {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    color: var(--white);
+    font-weight: 400;
+    line-height: 1;
+  }
+  .weather-detail {
+    font-size: 12px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .time-block {
+    text-align: right;
+    border-left: 1px solid var(--separator);
+    padding-left: 28px;
+  }
+  .live-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 34px;
+    color: var(--white);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .live-time-label {
+    font-size: 10px;
+    color: var(--white-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── MAIN GRID ──────────────────────────────────── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 480px 1fr 380px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* ── LEFT: STARTER BOARD ────────────────────────── */
+  .starter-col {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--separator);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 24px 32px 20px;
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+  }
+  .section-eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  /* NOW ON TEE */
+  .now-on-tee {
+    padding: 24px 32px;
+    background: var(--on-tee-glow);
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .now-on-tee::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--green-glow);
+    box-shadow: 0 0 12px var(--green-glow);
+  }
+
+  .on-tee-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-glow);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  .pulse-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--bg);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .on-tee-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 42px;
+    color: var(--green-glow);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .on-tee-hole {
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .on-tee-players {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .on-tee-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: var(--white);
+    font-weight: 400;
+  }
+  .player-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--separator);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .player-handicap {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+
+  /* ON DECK */
+  .on-deck-section {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .on-deck-header {
+    padding: 16px 32px 12px;
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+  }
+  .on-deck-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .deck-list {
+    flex: 1;
+    overflow: hidden;
+    padding: 8px 0;
+  }
+
+  .deck-group {
+    padding: 14px 32px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: background 0.2s;
+  }
+  .deck-group:last-child { border-bottom: none; }
+  .deck-group.next { background: rgba(201,168,76,0.05); }
+
+  .deck-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    color: var(--white);
+    letter-spacing: 1px;
+    min-width: 76px;
+    flex-shrink: 0;
+  }
+  .deck-time.next-time { color: var(--gold); }
+
+  .deck-hole {
+    font-size: 11px;
+    color: var(--white-dim);
+    min-width: 48px;
+    letter-spacing: 0.5px;
+  }
+  .deck-players-list {
+    flex: 1;
+    font-size: 14px;
+    color: var(--white-dim);
+    line-height: 1.5;
+  }
+  .deck-players-list b {
+    color: var(--white);
+    font-weight: 500;
+  }
+  .next-badge {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 2px 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── CENTER: FULL TEE SHEET ─────────────────────── */
+  .teesheet-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .teesheet-controls {
+    padding: 16px 36px;
+    border-bottom: 1px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .teesheet-legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .legend-dot.completed { background: var(--white-faint); }
+  .legend-dot.on-tee { background: var(--green-glow); box-shadow: 0 0 6px var(--green-glow); }
+  .legend-dot.upcoming { background: var(--gold); }
+  .legend-dot.open { border: 1px solid var(--separator); background: transparent; }
+
+  .teesheet-stats {
+    display: flex;
+    gap: 24px;
+  }
+  .stat-item {
+    text-align: right;
+  }
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    color: var(--white);
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--white-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* Table header */
+  .teesheet-table-header {
+    display: grid;
+    grid-template-columns: 90px 70px 1fr 1fr 1fr 80px;
+    padding: 10px 36px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+  }
+  .th {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .teesheet-scroll-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .teesheet-scroll-inner {
+    position: absolute;
+    width: 100%;
+    animation: teeScroll 60s linear infinite;
+  }
+  @keyframes teeScroll {
+    0%   { transform: translateY(0); }
+    45%  { transform: translateY(var(--tee-scroll-end, -40%)); }
+    50%  { transform: translateY(var(--tee-scroll-end, -40%)); }
+    95%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
+  }
+
+  .tee-row {
+    display: grid;
+    grid-template-columns: 90px 70px 1fr 1fr 1fr 80px;
+    padding: 0 36px;
+    min-height: 52px;
+    align-items: center;
+    border-bottom: 1px solid rgba(245,240,232,0.04);
+    transition: background 0.2s;
+    position: relative;
+  }
+  .tee-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .tee-row.status-on-tee {
+    background: rgba(78,153,102,0.08);
+  }
+  .tee-row.status-on-tee::before {
+    background: var(--green-glow);
+    box-shadow: 0 0 8px var(--green-glow);
+    opacity: 1;
+  }
+  .tee-row.status-completed {
+    opacity: 0.35;
+  }
+  .tee-row.status-open {
+    opacity: 0.6;
+  }
+
+  .tee-time-cell {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  .tee-time-cell.on-tee { color: var(--green-glow); font-weight: 500; }
+  .tee-time-cell.upcoming { color: var(--white); }
+  .tee-time-cell.completed { color: var(--white-dim); }
+
+  .tee-hole-cell {
+    font-size: 13px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .tee-player-cell {
+    font-size: 14px;
+    color: var(--white);
+    font-weight: 400;
+    padding-right: 8px;
+  }
+  .tee-player-cell.empty {
+    font-size: 12px;
+    color: var(--white-faint);
+    font-style: italic;
+    letter-spacing: 0.5px;
+  }
+
+  .tee-status-cell {}
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .status-badge.on-tee {
+    background: rgba(78,153,102,0.2);
+    color: var(--green-glow);
+    border: 1px solid rgba(78,153,102,0.3);
+  }
+  .status-badge.upcoming {
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  .status-badge.completed {
+    background: transparent;
+    color: var(--white-faint);
+    border: 1px solid rgba(245,240,232,0.1);
+  }
+  .status-badge.open {
+    background: transparent;
+    color: var(--white-faint);
+    border: 1px dashed rgba(245,240,232,0.15);
+  }
+
+  /* ── RIGHT: CONDITIONS + COURSE INFO ────────────── */
+  .info-col {
+    background: var(--bg-panel);
+    border-left: 1px solid var(--separator);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .course-conditions {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+  }
+
+  .conditions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .condition-card {
+    background: var(--bg-card);
+    border: 1px solid var(--separator);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .condition-icon { font-size: 18px; margin-bottom: 4px; }
+  .condition-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .condition-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--white);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+  .condition-sub {
+    font-size: 11px;
+    color: var(--white-dim);
+  }
+
+  /* PACE OF PLAY */
+  .pace-section {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--separator);
+    flex-shrink: 0;
+  }
+  .pace-bar-wrap {
+    margin-top: 12px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .pace-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--green-glow), var(--gold));
+    transition: width 1s ease;
+  }
+  .pace-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--white-dim);
+  }
+  .pace-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    color: var(--white);
+    margin-top: 10px;
+  }
+  .pace-status {
+    font-size: 12px;
+    color: var(--green-glow);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* NOTICES */
+  .notices-section {
+    flex: 1;
+    padding: 20px 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .notice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .notice-item {
+    background: var(--bg-card);
+    border-left: 3px solid var(--gold-dim);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 14px;
+  }
+  .notice-item.urgent { border-left-color: var(--red); }
+  .notice-item.green { border-left-color: var(--green-glow); }
+
+  .notice-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 3px;
+  }
+  .notice-body {
+    font-size: 12px;
+    color: var(--white-dim);
+    line-height: 1.5;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  .footer {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 52px;
+    position: relative;
+  }
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .sponsor-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .sponsor-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.25);
+  }
+  .sponsor-sep {
+    width: 1px; height: 28px;
+    background: var(--separator);
+  }
+  .sponsor-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--gold);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .sponsor-tagline {
+    font-size: 11px;
+    color: rgba(245,240,232,0.35);
+    margin-top: 1px;
+    letter-spacing: 0.5px;
+  }
+
+  .footer-ticker {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+  .footer-ticker span { color: var(--gold); }
+
+  .powered-by {
+    font-size: 11px;
+    color: rgba(245,240,232,0.25);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+  .powered-by b { color: var(--gold); font-weight: 600; }
+
+  /* ── ENTRANCE ───────────────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .starter-col  { animation: fadeIn 0.6s ease 0.1s both; }
+  .teesheet-col { animation: fadeIn 0.6s ease 0.2s both; }
+  .info-col     { animation: fadeIn 0.6s ease 0.3s both; }
+</style>
+</head>
+<body>
+<div class="display-wrapper">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="club-crest"></div>
+      <div class="club-info">
+        <div class="club-name" id="clubName">Ballantyne Country Club</div>
+        <div class="club-sub">Pro Shop — Tee Sheet</div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="tee-sheet-label">Today's Tee Sheet</div>
+      <div class="tee-sheet-date" id="headerDate">Saturday, March 28</div>
+    </div>
+    <div class="header-right">
+      <div class="weather-block">
+        <div class="weather-temp" id="weatherTemp">72°F</div>
+        <div class="weather-detail" id="weatherDetail">Partly Cloudy · SW 8mph</div>
+      </div>
+      <div class="time-block">
+        <div class="live-time" id="liveTime">00:00</div>
+        <div class="live-time-label">Local Time</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main-grid">
+
+    <!-- LEFT: STARTER BOARD -->
+    <div class="starter-col">
+      <div class="section-header">
+        <div class="section-eyebrow">First Tee</div>
+        <div class="section-title">Starter Board</div>
+      </div>
+
+      <div class="now-on-tee" id="nowOnTee">
+        <div class="on-tee-badge">
+          <div class="pulse-dot"></div>
+          Now on Tee
+        </div>
+        <div class="on-tee-time" id="onTeeTime">—</div>
+        <div class="on-tee-hole" id="onTeeHole">—</div>
+        <div class="on-tee-players" id="onTeePlayers"></div>
+      </div>
+
+      <div class="on-deck-section">
+        <div class="on-deck-header">
+          <div class="on-deck-label">On Deck</div>
+        </div>
+        <div class="deck-list" id="deckList"></div>
+      </div>
+    </div>
+
+    <!-- CENTER: FULL TEE SHEET -->
+    <div class="teesheet-col">
+      <div class="teesheet-controls">
+        <div class="teesheet-legend">
+          <div class="legend-item"><div class="legend-dot on-tee"></div> On Tee</div>
+          <div class="legend-item"><div class="legend-dot upcoming"></div> Upcoming</div>
+          <div class="legend-item"><div class="legend-dot completed"></div> Completed</div>
+          <div class="legend-item"><div class="legend-dot open"></div> Open</div>
+        </div>
+        <div class="teesheet-stats" id="teeSheetStats"></div>
+      </div>
+      <div class="teesheet-table-header">
+        <div class="th">Time</div>
+        <div class="th">Hole</div>
+        <div class="th">Player 1</div>
+        <div class="th">Player 2</div>
+        <div class="th">Player 3</div>
+        <div class="th">Status</div>
+      </div>
+      <div class="teesheet-scroll-wrapper">
+        <div class="teesheet-scroll-inner" id="teeSheetScroll"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CONDITIONS + INFO -->
+    <div class="info-col">
+      <div class="course-conditions">
+        <div class="section-eyebrow">Course Conditions</div>
+        <div class="conditions-grid" id="conditionsGrid"></div>
+      </div>
+
+      <div class="pace-section">
+        <div class="section-eyebrow">Pace of Play</div>
+        <div class="pace-value" id="paceValue">4:12</div>
+        <div class="pace-status" id="paceStatus">On Pace — 18 Holes</div>
+        <div class="pace-bar-wrap">
+          <div class="pace-bar" id="paceBar" style="width: 72%"></div>
+        </div>
+        <div class="pace-labels"><span>Ahead</span><span>On Pace</span><span>Behind</span></div>
+      </div>
+
+      <div class="notices-section">
+        <div class="section-eyebrow">Pro Shop Notices</div>
+        <div class="notice-list" id="noticeList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="sponsor-area">
+      <div>
+        <div class="sponsor-label">Presenting Sponsor</div>
+        <div class="sponsor-name" id="sponsorName">Genesis of Cary</div>
+        <div class="sponsor-tagline" id="sponsorTagline">The Ultimate Driving Experience</div>
+      </div>
+    </div>
+    <div class="footer-ticker" id="footerTicker">
+      Shotgun start events require pre-registration · Contact the Pro Shop at ext. <span>103</span> for same-day bookings
+    </div>
+    <div class="powered-by">
+      Powered by <b>ClubhouseCTV</b><br>
+      <span>clubhousectv.com</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CLUB DATA — Edit this block to update the display
+// ═══════════════════════════════════════════════════════════════
+const DATA = {
+
+  clubName: "Ballantyne Country Club",
+
+  sponsor: {
+    name: "Genesis of Cary",
+    tagline: "The Ultimate Driving Experience"
+  },
+
+  footerMessage: "Shotgun start events require pre-registration · Contact the Pro Shop at ext. 103 for same-day bookings",
+
+  weather: {
+    temp: "72°F",
+    detail: "Partly Cloudy · SW 8 mph"
+  },
+
+  paceOfPlay: {
+    display: "4:12",
+    status: "On Pace — 18 Holes",
+    percent: 72   // 0=ahead, 50=on pace, 100=behind
+  },
+
+  conditions: [
+    { icon: "🌿", label: "Fairways", value: "Firm & Fast", sub: "Ideal conditions" },
+    { icon: "⛳", label: "Greens", value: "11.5 Stimp", sub: "Rolling true" },
+    { icon: "💧", label: "Rough", value: "Moderate", sub: "Minimal moisture" },
+    { icon: "🏌️", label: "Cart Policy", value: "Path Only", sub: "Holes 1–9" }
+  ],
+
+  notices: [
+    { type: "urgent", title: "Cart Path Only — Holes 1–9", body: "Due to overnight irrigation, cart paths mandatory through mid-morning." },
+    { type: "green",  title: "#7 Green Back in Play", body: "Aeration complete. All 18 greens now at full speed." },
+    { type: "normal", title: "Member-Guest: April 5", body: "Registration closes April 1. Contact Pro Shop to confirm your pairing." }
+  ],
+
+  // ── TEE SHEET ────────────────────────────────────────────────
+  // status: "completed" | "on-tee" | "upcoming" | "open"
+  // Exactly ONE entry should be "on-tee" — engine auto-advances by time
+  teeSheet: [
+    { time: "7:00 AM", hole: "Hole 1", players: ["D. Harrington", "M. Castellano", "J. Pryor"],   status: "completed" },
+    { time: "7:08 AM", hole: "Hole 1", players: ["R. Wallace",   "T. Nguyen",     "Open"],         status: "completed" },
+    { time: "7:16 AM", hole: "Hole 1", players: ["S. Brennan",   "C. Park",        "W. Okafor"],   status: "completed" },
+    { time: "7:24 AM", hole: "Hole 1", players: ["L. Davidson",  "Open",           "Open"],        status: "completed" },
+    { time: "7:32 AM", hole: "Hole 10", players: ["K. Martinez", "P. Ellison",    "J. Banks"],     status: "completed" },
+    { time: "7:40 AM", hole: "Hole 10", players: ["A. Chen",     "F. Moreau",     "Open"],         status: "completed" },
+    { time: "7:48 AM", hole: "Hole 1", players: ["B. Garrity",   "T. Reed",        "M. Sullivan"], status: "completed" },
+    { time: "7:56 AM", hole: "Hole 1", players: ["G. Patterson", "Open",           "Open"],        status: "completed" },
+    { time: "8:04 AM", hole: "Hole 1", players: ["H. Whitmore",  "J. Castellano", "R. Patel"],     status: "completed" },
+    { time: "8:12 AM", hole: "Hole 10", players: ["C. Thornton", "W. Hayes",      "D. Kim"],       status: "completed" },
+    { time: "8:20 AM", hole: "Hole 1", players: ["N. Fitzgerald","A. Russo",      "Open"],         status: "on-tee"    },
+    { time: "8:28 AM", hole: "Hole 1", players: ["T. Coleman",   "B. Shaw",        "J. Osei"],     status: "upcoming"  },
+    { time: "8:36 AM", hole: "Hole 10", players: ["M. Lawson",   "C. Vega",        "Open"],        status: "upcoming"  },
+    { time: "8:44 AM", hole: "Hole 1", players: ["P. Nakamura",  "S. Dupont",     "W. Fraser"],    status: "upcoming"  },
+    { time: "8:52 AM", hole: "Hole 1", players: ["D. O'Brien",   "Open",           "Open"],        status: "upcoming"  },
+    { time: "9:00 AM", hole: "Hole 1", players: ["R. Sterling",  "A. Mendez",     "J. Kowalski"],  status: "upcoming"  },
+    { time: "9:08 AM", hole: "Hole 10", players: ["C. Blackwood","T. Yuen",        "Open"],        status: "upcoming"  },
+    { time: "9:16 AM", hole: "Hole 1", players: ["Open",         "Open",           "Open"],        status: "open"      },
+    { time: "9:24 AM", hole: "Hole 1", players: ["S. Holbrook",  "M. Petrov",     "Open"],         status: "upcoming"  },
+    { time: "9:32 AM", hole: "Hole 10", players: ["Open",        "Open",           "Open"],        status: "open"      },
+    { time: "9:40 AM", hole: "Hole 1", players: ["F. Delacroix", "B. Yamamoto",   "C. Oduya"],     status: "upcoming"  },
+    { time: "9:48 AM", hole: "Hole 1", players: ["Open",         "Open",           "Open"],        status: "open"      },
+    { time: "9:56 AM", hole: "Hole 1", players: ["K. Johansson", "P. O'Sullivan", "T. Baptiste"],  status: "upcoming"  },
+    { time: "10:04 AM", hole: "Hole 10", players: ["Open",       "Open",           "Open"],        status: "open"      },
+    { time: "10:12 AM", hole: "Hole 1", players: ["M. Beaumont", "A. Nakamura",   "Open"],         status: "upcoming"  }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+function getInitials(name) {
+  if (!name || name === "Open") return "—";
+  return name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0,2);
+}
+
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const d = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('liveTime').textContent = t;
+  document.getElementById('headerDate').textContent = d;
+}
+
+function renderHeader() {
+  document.getElementById('clubName').textContent = DATA.clubName;
+  document.getElementById('weatherTemp').textContent = DATA.weather.temp;
+  document.getElementById('weatherDetail').textContent = DATA.weather.detail;
+  document.getElementById('sponsorName').textContent = DATA.sponsor.name;
+  document.getElementById('sponsorTagline').textContent = DATA.sponsor.tagline;
+  document.getElementById('footerTicker').innerHTML = DATA.footerMessage;
+}
+
+function renderConditions() {
+  const grid = document.getElementById('conditionsGrid');
+  grid.innerHTML = DATA.conditions.map(c => `
+    <div class="condition-card">
+      <div class="condition-icon">${c.icon}</div>
+      <div class="condition-label">${c.label}</div>
+      <div class="condition-value">${c.value}</div>
+      <div class="condition-sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderPace() {
+  document.getElementById('paceValue').textContent = DATA.paceOfPlay.display;
+  document.getElementById('paceStatus').textContent = DATA.paceOfPlay.status;
+  document.getElementById('paceBar').style.width = DATA.paceOfPlay.percent + '%';
+}
+
+function renderNotices() {
+  const list = document.getElementById('noticeList');
+  list.innerHTML = DATA.notices.map(n => `
+    <div class="notice-item ${n.type === 'urgent' ? 'urgent' : n.type === 'green' ? 'green' : ''}">
+      <div class="notice-title">${n.title}</div>
+      <div class="notice-body">${n.body}</div>
+    </div>
+  `).join('');
+}
+
+function renderStarterBoard() {
+  const onTeeIdx = DATA.teeSheet.findIndex(r => r.status === 'on-tee');
+  const onTee = DATA.teeSheet[onTeeIdx];
+
+  if (onTee) {
+    document.getElementById('onTeeTime').textContent = onTee.time;
+    document.getElementById('onTeeHole').textContent = onTee.hole.toUpperCase();
+    document.getElementById('onTeePlayers').innerHTML = onTee.players
+      .filter(p => p !== 'Open')
+      .map(p => `
+        <div class="on-tee-player">
+          <div class="player-avatar">${getInitials(p)}</div>
+          <span>${p}</span>
+          <span class="player-handicap">HDC ${Math.floor(Math.random()*20)+1}</span>
+        </div>
+      `).join('');
+  }
+
+  // On deck = next 3 upcoming after on-tee
+  const upcoming = DATA.teeSheet
+    .slice(onTeeIdx + 1)
+    .filter(r => r.status === 'upcoming' || r.status === 'open')
+    .slice(0, 4);
+
+  const deckList = document.getElementById('deckList');
+  deckList.innerHTML = upcoming.map((g, i) => {
+    const playerNames = g.players.filter(p => p !== 'Open');
+    const displayNames = playerNames.length > 0
+      ? playerNames.map((p, j) => j === 0 ? `<b>${p}</b>` : p).join(', ')
+      : '<em style="color:var(--white-faint)">Open tee time</em>';
+    return `
+      <div class="deck-group ${i === 0 ? 'next' : ''}">
+        <div class="deck-time ${i === 0 ? 'next-time' : ''}">${g.time}</div>
+        <div class="deck-hole">${g.hole.replace('Hole ','#')}</div>
+        <div class="deck-players-list">${displayNames}</div>
+        ${i === 0 ? '<div class="next-badge">Next</div>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTeeSheet() {
+  const rows = DATA.teeSheet;
+  const completed = rows.filter(r => r.status === 'completed').length;
+  const upcoming  = rows.filter(r => r.status === 'upcoming').length;
+  const open      = rows.filter(r => r.status === 'open').length;
+
+  document.getElementById('teeSheetStats').innerHTML = `
+    <div class="stat-item">
+      <div class="stat-val">${completed}</div>
+      <div class="stat-label">Out</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">${upcoming}</div>
+      <div class="stat-label">Upcoming</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">${open}</div>
+      <div class="stat-label">Open</div>
+    </div>
+  `;
+
+  const scroll = document.getElementById('teeSheetScroll');
+  // Duplicate for scroll loop
+  let html = '';
+  [rows, rows].forEach(set => {
+    set.forEach(row => {
+      const p = row.players;
+      const statusLabel = row.status === 'on-tee' ? 'On Tee'
+        : row.status === 'upcoming' ? 'Upcoming'
+        : row.status === 'completed' ? 'Done'
+        : 'Open';
+      const timeClass = row.status === 'on-tee' ? 'on-tee'
+        : row.status === 'upcoming' ? 'upcoming'
+        : 'completed';
+
+      html += `
+        <div class="tee-row status-${row.status}">
+          <div class="tee-time-cell ${timeClass}">${row.time}</div>
+          <div class="tee-hole-cell">${row.hole}</div>
+          ${p.map(player => `
+            <div class="tee-player-cell ${player === 'Open' ? 'empty' : ''}">${player === 'Open' ? 'Open' : player}</div>
+          `).join('')}
+          <div class="tee-status-cell">
+            <span class="status-badge ${row.status}">${statusLabel}</span>
+          </div>
+        </div>
+      `;
+    });
+  });
+  scroll.innerHTML = html;
+
+  // Set scroll distance
+  setTimeout(() => {
+    const totalH = scroll.scrollHeight;
+    const halfH = totalH / 2;
+    const containerH = document.querySelector('.teesheet-scroll-wrapper').offsetHeight;
+    const dist = Math.max(0, halfH - containerH);
+    scroll.style.setProperty('--tee-scroll-end', `-${dist}px`);
+  }, 200);
+}
+
+function init() {
+  renderHeader();
+  renderConditions();
+  renderPace();
+  renderNotices();
+  renderStarterBoard();
+  renderTeeSheet();
+  updateClock();
+  setInterval(updateClock, 1000);
+}
+
+init();
+</script>
+</body>
+</html>
