@@ -50,6 +50,81 @@
     opacity: 0;
   }
 
+  /* ── ANNOUNCEMENT OVERLAY ── */
+  #announcement-frame {
+    position: absolute;
+    inset: 0 0 52px 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s ease;
+    z-index: 40;
+  }
+  #announcement-frame.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Progress bar — shows during announcements */
+  #announcement-progress-wrap {
+    position: absolute;
+    bottom: 52px; left: 0; right: 0;
+    height: 3px;
+    background: rgba(0,0,0,0.5);
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #announcement-progress-wrap.visible { opacity: 1; }
+  #announcement-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--green-glow));
+    width: 0%;
+  }
+
+  /* Return badge — shown during announcements */
+  #return-badge {
+    position: absolute;
+    top: 24px; right: 40px;
+    background: rgba(13,31,23,0.88);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 6px;
+    padding: 9px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 55;
+    opacity: 0;
+    transition: opacity 0.4s;
+    backdrop-filter: blur(8px);
+  }
+  #return-badge.visible { opacity: 1; }
+  .return-pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green-glow);
+    animation: pulse 1.4s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.4; transform:scale(0.7); }
+  }
+  .return-text {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.6);
+  }
+  .return-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    min-width: 18px;
+    text-align: center;
+  }
+
   /* ── SYSTEM BAR ── */
   #system-bar {
     position: absolute;
@@ -104,7 +179,6 @@
     gap: 6px;
   }
 
-  /* Schedule pills */
   .schedule-pills {
     display: flex;
     gap: 6px;
@@ -265,9 +339,24 @@
 
 <!-- Module display area -->
 <div id="display-frame">
-  <iframe id="iframe-teesheet" class="module-iframe" src="teesheet.html" title="Tee Sheet"></iframe>
-  <iframe id="iframe-fnb"      class="module-iframe" src="fnb.html"      title="Dining"></iframe>
-  <iframe id="iframe-court"    class="module-iframe" src="court.html"    title="Tennis Courts"></iframe>
+  <iframe id="iframe-teesheet"     class="module-iframe" src="teesheet.html"     title="Tee Sheet"></iframe>
+  <iframe id="iframe-fnb"          class="module-iframe" src="fnb.html"          title="Dining"></iframe>
+  <iframe id="iframe-court"        class="module-iframe" src="court.html"        title="Tennis Courts"></iframe>
+</div>
+
+<!-- Announcement overlay (sits above modules, below system bar) -->
+<iframe id="announcement-frame" src="" title="Announcement"></iframe>
+
+<!-- Announcement progress bar -->
+<div id="announcement-progress-wrap">
+  <div id="announcement-progress-bar"></div>
+</div>
+
+<!-- Return to schedule badge -->
+<div id="return-badge">
+  <div class="return-pulse"></div>
+  <div class="return-text">Returning in</div>
+  <div class="return-count" id="returnCount">9</div>
 </div>
 
 <!-- System bar -->
@@ -298,86 +387,91 @@
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CLUBOS DISPLAY SCHEDULE
-// Edit this config to set the day's schedule.
 // Each slot: { name, moduleId, start, end }
-// start/end = hour in 24hr format (integers)
-// moduleId must match an <iframe id="iframe-{moduleId}">
+// start/end = 24hr integers. moduleId matches iframe-{moduleId}
 // ═══════════════════════════════════════════════════════════════
 const SCHEDULE = [
-  { name: "Tee Sheet",         moduleId: "teesheet", start: 6,  end: 9  },
-  { name: "Tennis Courts",     moduleId: "court",    start: 9,  end: 12 },
-  { name: "Lunch & Dining",    moduleId: "fnb",      start: 12, end: 14 },
-  { name: "Tennis Courts",     moduleId: "court",    start: 14, end: 18 },
-  { name: "Dinner & Events",   moduleId: "fnb",      start: 18, end: 21 },
-  { name: "Tennis Courts",     moduleId: "court",    start: 21, end: 6  }, // overnight fallback
+  { name: "Tee Sheet",       moduleId: "teesheet", start: 6,  end: 9  },
+  { name: "Tennis Courts",   moduleId: "court",    start: 9,  end: 12 },
+  { name: "Lunch & Dining",  moduleId: "fnb",      start: 12, end: 14 },
+  { name: "Tennis Courts",   moduleId: "court",    start: 14, end: 18 },
+  { name: "Dinner & Events", moduleId: "fnb",      start: 18, end: 21 },
+  { name: "Tennis Courts",   moduleId: "court",    start: 21, end: 6  },
 ];
 
-// Demo mode: cycles modules every N seconds instead of using real time
-// Set to 0 to disable demo mode and use real schedule
-const DEMO_CYCLE_SECONDS = 0;
+// ═══════════════════════════════════════════════════════════════
+// ANNOUNCEMENTS
+// Add slides here. Each plays for ANNOUNCEMENT_DURATION seconds,
+// then display returns to the active schedule module.
+// To remove a slide: delete its entry. To disable all: set to [].
+// interval = how many seconds between announcement cycles.
+// ═══════════════════════════════════════════════════════════════
+const ANNOUNCEMENTS = [
+  { label: "Men's Saturday Clinic", url: "clinic-announcement.html" },
+  // Add more: { label: "Wine Dinner Apr 12", url: "wine-dinner.html" },
+];
+
+const ANNOUNCEMENT_INTERVAL  = 60;   // seconds between cycles
+const ANNOUNCEMENT_DURATION  = 9;    // seconds per slide
+
+// Demo mode: set to true via ?demo URL param — cycles modules fast
+const DEMO_CYCLE_SECONDS = 12;
 
 // ═══════════════════════════════════════════════════════════════
-// SCHEDULER ENGINE
+// SCHEDULER ENGINE — no edits needed below
 // ═══════════════════════════════════════════════════════════════
 
-let currentModuleId = null;
-let overrideActive = false;
-let demoIndex = 0;
+let currentModuleId  = null;
+let overrideActive   = false;
+let announcementActive = false;
+let announcementTimer  = null;
+let countdownInterval  = null;
+let announcementIndex  = 0;
 
+// ── Schedule helpers
 function getScheduledSlot() {
   const hour = new Date().getHours();
   return SCHEDULE.find(slot => {
     if (slot.start < slot.end) return hour >= slot.start && hour < slot.end;
-    return hour >= slot.start || hour < slot.end; // overnight wrap
+    return hour >= slot.start || hour < slot.end;
   }) || SCHEDULE[0];
 }
 
-function getNextSlot(currentSlot) {
-  const idx = SCHEDULE.indexOf(currentSlot);
+function getNextSlot(current) {
+  const idx = SCHEDULE.indexOf(current);
   return SCHEDULE[(idx + 1) % SCHEDULE.length];
 }
 
 function formatHour(h) {
   if (h === 0 || h === 24) return '12:00 AM';
   if (h === 12) return '12:00 PM';
-  if (h > 12) return `${h - 12}:00 PM`;
+  if (h > 12)  return `${h - 12}:00 PM`;
   return `${h}:00 AM`;
 }
 
+// ── Module activation
 function activateModule(moduleId, slotName) {
   if (currentModuleId === moduleId) return;
-
   const overlay = document.getElementById('transition-overlay');
   overlay.classList.add('active');
-
   setTimeout(() => {
-    // Hide all
-    document.querySelectorAll('.module-iframe').forEach(f => {
-      f.classList.remove('active', 'exiting');
-    });
-    // Show target
+    document.querySelectorAll('.module-iframe').forEach(f => f.classList.remove('active', 'exiting'));
     const target = document.getElementById(`iframe-${moduleId}`);
     if (target) target.classList.add('active');
-
     currentModuleId = moduleId;
     document.getElementById('currentModuleName').textContent = slotName;
     updatePills();
-
     overlay.classList.remove('active');
   }, 400);
 }
 
 function updatePills() {
   const pills = document.getElementById('schedulePills');
-  pills.innerHTML = SCHEDULE.map((slot, i) => {
-    const isActive = slot.moduleId === currentModuleId &&
-      SCHEDULE.indexOf(SCHEDULE.find(s => s.moduleId === currentModuleId)) === i;
-    // Determine active by current time
-    const hour = new Date().getHours();
-    const active = (slot.start < slot.end)
+  const hour  = new Date().getHours();
+  pills.innerHTML = SCHEDULE.map(slot => {
+    const active = slot.start < slot.end
       ? (hour >= slot.start && hour < slot.end)
       : (hour >= slot.start || hour < slot.end);
-
     return `<div class="schedule-pill ${active ? 'active' : 'upcoming'}">
       ${slot.name} · ${formatHour(slot.start)}
     </div>`;
@@ -385,34 +479,102 @@ function updatePills() {
 }
 
 function updateNextUp() {
-  const current = getScheduledSlot();
-  const next = getNextSlot(current);
+  const next = getNextSlot(getScheduledSlot());
   document.getElementById('nextUpName').textContent = next.name;
-  document.getElementById('nextUpTime').textContent = formatHour(next.start);
+  document.getElementById('nextUpTime').textContent  = formatHour(next.start);
 }
 
 function updateClock() {
-  const now = new Date();
-  const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   document.getElementById('liveClock').textContent = t;
 }
 
 function checkSchedule() {
-  if (overrideActive) return;
+  if (overrideActive || announcementActive) return;
   const slot = getScheduledSlot();
   activateModule(slot.moduleId, slot.name);
   updateNextUp();
   updatePills();
 }
 
-// ── URL Override: ?module=teesheet or ?module=fnb
+// ── Announcement engine
+function runAnnouncement() {
+  if (overrideActive || ANNOUNCEMENTS.length === 0) {
+    scheduleNextAnnouncement();
+    return;
+  }
+
+  const slide = ANNOUNCEMENTS[announcementIndex % ANNOUNCEMENTS.length];
+  announcementIndex++;
+  announcementActive = true;
+
+  // Load and show
+  const frame    = document.getElementById('announcement-frame');
+  const progress = document.getElementById('announcement-progress-wrap');
+  const bar      = document.getElementById('announcement-progress-bar');
+  const badge    = document.getElementById('return-badge');
+  const countEl  = document.getElementById('returnCount');
+
+  frame.src = slide.url;
+  frame.classList.add('visible');
+  progress.classList.add('visible');
+  badge.classList.add('visible');
+
+  // Progress bar animation
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = `width ${ANNOUNCEMENT_DURATION}s linear`;
+    bar.style.width = '100%';
+  }));
+
+  // Countdown
+  let secondsLeft = ANNOUNCEMENT_DURATION;
+  countEl.textContent = secondsLeft;
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    secondsLeft--;
+    countEl.textContent = Math.max(0, secondsLeft);
+  }, 1000);
+
+  // Return after duration
+  announcementTimer = setTimeout(() => {
+    clearInterval(countdownInterval);
+    frame.classList.remove('visible');
+    progress.classList.remove('visible');
+    badge.classList.remove('visible');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    announcementActive = false;
+
+    // Brief pause then restore module
+    setTimeout(() => {
+      checkSchedule();
+      scheduleNextAnnouncement();
+    }, 800);
+  }, ANNOUNCEMENT_DURATION * 1000);
+}
+
+function scheduleNextAnnouncement() {
+  clearTimeout(announcementTimer);
+  if (ANNOUNCEMENTS.length > 0) {
+    announcementTimer = setTimeout(runAnnouncement, ANNOUNCEMENT_INTERVAL * 1000);
+  }
+}
+
+// ── URL overrides
 function checkUrlOverride() {
   const params = new URLSearchParams(window.location.search);
-  const mod = params.get('module');
+  const mod    = params.get('module');
 
-  // Demo mode via ?demo
   if (params.has('demo')) {
     enableDemoMode();
+    return;
+  }
+
+  if (params.has('announce')) {
+    // ?announce — trigger announcement immediately for testing
+    setTimeout(runAnnouncement, 1000);
     return;
   }
 
@@ -422,8 +584,6 @@ function checkUrlOverride() {
     const name = slot ? slot.name : mod;
     activateModule(mod, `${name} ✦ Override`);
     document.getElementById('override-banner').style.display = 'block';
-
-    // ESC to cancel override
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         overrideActive = false;
@@ -434,30 +594,36 @@ function checkUrlOverride() {
   }
 }
 
-// Demo mode: cycles modules every DEMO_CYCLE_SECONDS
 function enableDemoMode() {
-  const uniqueModules = [...new Set(SCHEDULE.map(s => ({ moduleId: s.moduleId, name: s.name })))];
+  const modules = [...new Map(SCHEDULE.map(s => [s.moduleId, s])).values()];
   let idx = 0;
   function cycleDemo() {
-    const slot = uniqueModules[idx % uniqueModules.length];
+    const slot = modules[idx % modules.length];
     activateModule(slot.moduleId, slot.name + ' ✦ Demo');
     idx++;
   }
   cycleDemo();
-  setInterval(cycleDemo, (DEMO_CYCLE_SECONDS || 12) * 1000);
+  setInterval(cycleDemo, DEMO_CYCLE_SECONDS * 1000);
+
+  // Also demo announcements after first cycle
+  if (ANNOUNCEMENTS.length > 0) {
+    setTimeout(runAnnouncement, DEMO_CYCLE_SECONDS * 1500);
+  }
 }
 
-// ── INIT
+// ── Init
 function init() {
   updateClock();
   setInterval(updateClock, 1000);
-  setInterval(checkSchedule, 30000); // check schedule every 30s
+  setInterval(checkSchedule, 30000);
 
-  // Hide loading screen after iframes settle
   setTimeout(() => {
     document.getElementById('loading-screen').classList.add('hidden');
     checkUrlOverride();
-    if (!overrideActive) checkSchedule();
+    if (!overrideActive) {
+      checkSchedule();
+      scheduleNextAnnouncement();
+    }
   }, 1400);
 }
 
