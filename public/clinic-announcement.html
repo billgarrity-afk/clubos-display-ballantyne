@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Men's Saturday Clinic — Ballantyne CC</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #0D1F17;
+    --bg-panel:    #0A1A12;
+    --bg-card:     #162B1F;
+    --green-mid:   #2D5A3D;
+    --green-glow:  #4E9966;
+    --green-light: rgba(78,153,102,0.12);
+    --gold:        #C9A84C;
+    --gold-dim:    rgba(201,168,76,0.25);
+    --gold-light:  rgba(201,168,76,0.10);
+    --white:       #F5F0E8;
+    --white-dim:   rgba(245,240,232,0.55);
+    --white-faint: rgba(245,240,232,0.15);
+    --separator:   rgba(201,168,76,0.20);
+    --red:         #E87C5A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    color: var(--white);
+  }
+
+  /* ── BACKGROUND TEXTURE ─────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 900px 700px at 75% 50%, rgba(78,153,102,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 400px at 20% 80%, rgba(201,168,76,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────── */
+  .display-wrapper {
+    display: grid;
+    grid-template-rows: 88px 1fr 64px;
+    height: 1080px;
+    width: 1920px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  .header {
+    background: var(--bg-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 52px;
+    border-bottom: 1px solid var(--separator);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--green-glow), var(--gold), transparent);
+    opacity: 0.6;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .club-crest {
+    width: 52px; height: 52px;
+    border: 1.5px solid var(--gold-dim);
+    border-radius: 50%;
+    background: var(--gold-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .club-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .club-sub {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-tag {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 5px 14px;
+    border-radius: 3px;
+  }
+  .live-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    color: var(--white);
+    letter-spacing: 2px;
+    border-left: 1px solid var(--separator);
+    padding-left: 20px;
+  }
+
+  /* ── MAIN CONTENT ───────────────────────────────── */
+  .main {
+    display: grid;
+    grid-template-columns: 620px 1fr;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* ── LEFT: HERO ─────────────────────────────────── */
+  .hero-col {
+    padding: 56px 52px 48px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--separator);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* court net decorative line */
+  .hero-col::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: 20%; bottom: 20%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--green-glow), transparent);
+    opacity: 0.4;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .eyebrow-line {
+    width: 32px; height: 2px;
+    background: var(--gold);
+  }
+  .eyebrow-text {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .new-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-glow);
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+
+  .clinic-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 72px;
+    color: var(--white);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .clinic-title .accent {
+    color: var(--gold);
+    display: block;
+  }
+
+  .clinic-subtitle {
+    font-size: 16px;
+    color: var(--white-dim);
+    line-height: 1.6;
+    margin-top: 20px;
+    max-width: 460px;
+  }
+
+  .pro-tag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+    padding: 14px 18px;
+    background: var(--gold-light);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .pro-avatar {
+    width: 42px; height: 42px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+  .pro-info {}
+  .pro-role {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2px;
+  }
+  .pro-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  /* ── RIGHT: DETAILS ─────────────────────────────── */
+  .details-col {
+    padding: 48px 56px 48px 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Key details row */
+  .key-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--separator);
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--green-glow));
+    opacity: 0.7;
+  }
+  .stat-icon { font-size: 20px; margin-bottom: 8px; }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    color: var(--white);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .stat-sub {
+    font-size: 12px;
+    color: var(--white-dim);
+    margin-top: 2px;
+  }
+
+  /* Description */
+  .description-block {
+    background: var(--bg-card);
+    border: 1px solid var(--separator);
+    border-radius: 10px;
+    padding: 22px 26px;
+  }
+  .desc-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .desc-text {
+    font-size: 16px;
+    color: var(--white-dim);
+    line-height: 1.65;
+  }
+
+  /* Policy/info pills */
+  .info-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .info-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--white-faint);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--white-dim);
+    line-height: 1.35;
+  }
+  .info-pill .pill-icon { font-size: 15px; flex-shrink: 0; }
+  .info-pill.warning {
+    background: rgba(232,124,90,0.08);
+    border-color: rgba(232,124,90,0.2);
+    color: #F0A080;
+  }
+
+  /* CTA */
+  .cta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: auto;
+  }
+  .cta-primary {
+    background: var(--gold);
+    color: var(--bg);
+    border-radius: 8px;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cta-secondary {
+    background: var(--green-light);
+    border: 1px solid rgba(78,153,102,0.3);
+    color: var(--green-glow);
+    border-radius: 8px;
+    padding: 18px 24px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  .footer {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--separator);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 52px;
+  }
+  .footer::before {
+    content: '';
+    position: absolute;
+    /* not needed here */
+  }
+  .footer-left {
+    font-size: 12px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+  .footer-left span { color: var(--gold); }
+  .footer-center {
+    font-size: 12px;
+    color: rgba(245,240,232,0.3);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .powered-by {
+    font-size: 11px;
+    color: rgba(245,240,232,0.25);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+  .powered-by b { color: var(--gold); font-weight: 600; }
+
+  /* ── ANIMATIONS ─────────────────────────────────── */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-col     { animation: fadeSlideUp 0.7s ease 0.1s both; }
+  .details-col  { animation: fadeSlideUp 0.7s ease 0.25s both; }
+  .key-stats .stat-card:nth-child(1) { animation: fadeSlideUp 0.5s ease 0.3s both; }
+  .key-stats .stat-card:nth-child(2) { animation: fadeSlideUp 0.5s ease 0.4s both; }
+  .key-stats .stat-card:nth-child(3) { animation: fadeSlideUp 0.5s ease 0.5s both; }
+</style>
+</head>
+<body>
+
+<div class="display-wrapper">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="club-crest">🎾</div>
+      <div>
+        <div class="club-name">Ballantyne Country Club</div>
+        <div class="club-sub">Tennis Program</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-tag">Member Clinic</div>
+      <div class="live-time" id="liveTime">12:00 PM</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT: HERO -->
+    <div class="hero-col">
+      <div>
+        <div class="eyebrow">
+          <div class="eyebrow-line"></div>
+          <div class="eyebrow-text">Now Enrolling</div>
+        </div>
+        <div class="new-badge">● New Program</div>
+        <div class="clinic-title">
+          Men's
+          <span class="accent">Saturday</span>
+          Clinic
+        </div>
+        <div class="clinic-subtitle">
+          Fast-paced drills and live ball play with stroke tips and strategies for all levels.
+        </div>
+      </div>
+      <div class="pro-tag">
+        <div class="pro-avatar">GL</div>
+        <div class="pro-info">
+          <div class="pro-role">Your Instructor</div>
+          <div class="pro-name">George Lovitt, Tennis Pro</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: DETAILS -->
+    <div class="details-col">
+
+      <div class="key-stats">
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">When</div>
+          <div class="stat-value">Saturdays</div>
+          <div class="stat-sub">10:00 – 11:30 AM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Cost</div>
+          <div class="stat-value">$30+</div>
+          <div class="stat-sub">Per person, per clinic</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎾</div>
+          <div class="stat-label">Level</div>
+          <div class="stat-value">3.0+ NTRP</div>
+          <div class="stat-sub">Or coach approval</div>
+        </div>
+      </div>
+
+      <div class="description-block">
+        <div class="desc-label">About This Clinic</div>
+        <div class="desc-text">
+          Curious about bettering your game? Looking to break down opponents and build better tactics? Join Tennis Pro George Lovitt for fast-paced drills and live ball play — stroke tips and strategies for all levels.
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-pill">
+          <span class="pill-icon">👥</span>
+          Limited to 12 players
+        </div>
+        <div class="info-pill">
+          <span class="pill-icon">📱</span>
+          Register via mobile app or BCC website
+        </div>
+        <div class="info-pill">
+          <span class="pill-icon">✅</span>
+          Professional staff approval required
+        </div>
+        <div class="info-pill warning">
+          <span class="pill-icon">⚠️</span>
+          24-hr cancellation policy · $10 fee for unregistered walk-ins
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <div class="cta-primary">
+          📱 Register on Mobile App or BCC Website
+        </div>
+        <div class="cta-secondary">
+          🎾 3-or-fewer players = 1 hour format
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-left">Questions? <span>Contact the Tennis Pro Shop</span></div>
+    <div class="footer-center">Ballantyne Country Club · Member Programs</div>
+    <div class="powered-by">Powered by <b>ClubhouseCTV</b></div>
+  </footer>
+
+</div>
+
+<script>
+  function updateClock() {
+    const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    document.getElementById('liveTime').textContent = t;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
