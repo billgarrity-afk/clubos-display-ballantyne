@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClubOS Display — Ballantyne Country Club</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #C9A84C;
+    --green-dark: #1A3A2A;
+    --green-glow: #4E9966;
+    --white: #F5F0E8;
+    --white-dim: rgba(245,240,232,0.5);
+    --bg: #0D1F17;
+  }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── FRAME WRAPPER ── */
+  #display-frame {
+    position: absolute;
+    inset: 0 0 52px 0;
+    background: var(--bg);
+  }
+
+  .module-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+  }
+  .module-iframe.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .module-iframe.exiting {
+    opacity: 0;
+  }
+
+  /* ── SYSTEM BAR ── */
+  #system-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: var(--bg);
+    border-top: 1px solid rgba(201,168,76,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    z-index: 100;
+  }
+
+  .bar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .clubos-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .bar-sep {
+    width: 1px;
+    height: 24px;
+    background: rgba(201,168,76,0.25);
+  }
+
+  .current-module-label {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+  }
+  .current-module-name {
+    font-size: 14px;
+    color: var(--white);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .bar-center {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Schedule pills */
+  .schedule-pills {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .schedule-pill {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.15);
+    color: var(--white-dim);
+    white-space: nowrap;
+    transition: all 0.4s ease;
+  }
+  .schedule-pill.active {
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .schedule-pill.upcoming {
+    color: rgba(245,240,232,0.35);
+  }
+
+  .bar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .next-up {
+    text-align: right;
+  }
+  .next-up-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+  }
+  .next-up-name {
+    font-size: 13px;
+    color: var(--white-dim);
+  }
+  .next-up-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+  }
+
+  .live-clock {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    color: var(--white);
+    letter-spacing: 2px;
+    border-left: 1px solid rgba(201,168,76,0.2);
+    padding-left: 20px;
+  }
+
+  /* ── OVERRIDE BANNER ── */
+  #override-banner {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(201,168,76,0.15);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 8px 24px;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    z-index: 200;
+    display: none;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── TRANSITION OVERLAY ── */
+  #transition-overlay {
+    position: absolute;
+    inset: 0 0 52px 0;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 0.4s ease;
+  }
+  #transition-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Loading state */
+  #loading-screen {
+    position: absolute;
+    inset: 0 0 52px 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 150;
+    transition: opacity 0.6s ease;
+  }
+  #loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .loading-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    color: var(--gold);
+    letter-spacing: 6px;
+    font-weight: 500;
+  }
+  .loading-sub {
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+  }
+  .loading-bar-wrap {
+    width: 240px;
+    height: 2px;
+    background: rgba(201,168,76,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .loading-bar {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: loadBar 1.4s ease forwards;
+  }
+  @keyframes loadBar {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading-screen">
+  <div class="loading-logo">ClubOS</div>
+  <div class="loading-sub">Ballantyne Country Club · Display Loading</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+</div>
+
+<!-- Transition overlay -->
+<div id="transition-overlay"></div>
+
+<!-- Override banner -->
+<div id="override-banner">⚡ Override Active — Press ESC to return to schedule</div>
+
+<!-- Module display area -->
+<div id="display-frame">
+  <iframe id="iframe-teesheet" class="module-iframe" src="teesheet.html" title="Tee Sheet"></iframe>
+  <iframe id="iframe-fnb"      class="module-iframe" src="fnb.html"      title="Dining"></iframe>
+  <iframe id="iframe-court"    class="module-iframe" src="court.html"    title="Tennis Courts"></iframe>
+</div>
+
+<!-- System bar -->
+<div id="system-bar">
+  <div class="bar-left">
+    <div class="clubos-logo">ClubOS</div>
+    <div class="bar-sep"></div>
+    <div>
+      <div class="current-module-label">Now Showing</div>
+      <div class="current-module-name" id="currentModuleName">—</div>
+    </div>
+  </div>
+
+  <div class="bar-center">
+    <div class="schedule-pills" id="schedulePills"></div>
+  </div>
+
+  <div class="bar-right">
+    <div class="next-up" id="nextUpBlock">
+      <div class="next-up-label">Up Next</div>
+      <div class="next-up-name" id="nextUpName">—</div>
+      <div class="next-up-time" id="nextUpTime">—</div>
+    </div>
+    <div class="live-clock" id="liveClock">12:00 PM</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CLUBOS DISPLAY SCHEDULE
+// Edit this config to set the day's schedule.
+// Each slot: { name, moduleId, start, end }
+// start/end = hour in 24hr format (integers)
+// moduleId must match an <iframe id="iframe-{moduleId}">
+// ═══════════════════════════════════════════════════════════════
+const SCHEDULE = [
+  { name: "Tee Sheet",         moduleId: "teesheet", start: 6,  end: 9  },
+  { name: "Tennis Courts",     moduleId: "court",    start: 9,  end: 12 },
+  { name: "Lunch & Dining",    moduleId: "fnb",      start: 12, end: 14 },
+  { name: "Tennis Courts",     moduleId: "court",    start: 14, end: 18 },
+  { name: "Dinner & Events",   moduleId: "fnb",      start: 18, end: 21 },
+  { name: "Tennis Courts",     moduleId: "court",    start: 21, end: 6  }, // overnight fallback
+];
+
+// Demo mode: cycles modules every N seconds instead of using real time
+// Set to 0 to disable demo mode and use real schedule
+const DEMO_CYCLE_SECONDS = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// SCHEDULER ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+let currentModuleId = null;
+let overrideActive = false;
+let demoIndex = 0;
+
+function getScheduledSlot() {
+  const hour = new Date().getHours();
+  return SCHEDULE.find(slot => {
+    if (slot.start < slot.end) return hour >= slot.start && hour < slot.end;
+    return hour >= slot.start || hour < slot.end; // overnight wrap
+  }) || SCHEDULE[0];
+}
+
+function getNextSlot(currentSlot) {
+  const idx = SCHEDULE.indexOf(currentSlot);
+  return SCHEDULE[(idx + 1) % SCHEDULE.length];
+}
+
+function formatHour(h) {
+  if (h === 0 || h === 24) return '12:00 AM';
+  if (h === 12) return '12:00 PM';
+  if (h > 12) return `${h - 12}:00 PM`;
+  return `${h}:00 AM`;
+}
+
+function activateModule(moduleId, slotName) {
+  if (currentModuleId === moduleId) return;
+
+  const overlay = document.getElementById('transition-overlay');
+  overlay.classList.add('active');
+
+  setTimeout(() => {
+    // Hide all
+    document.querySelectorAll('.module-iframe').forEach(f => {
+      f.classList.remove('active', 'exiting');
+    });
+    // Show target
+    const target = document.getElementById(`iframe-${moduleId}`);
+    if (target) target.classList.add('active');
+
+    currentModuleId = moduleId;
+    document.getElementById('currentModuleName').textContent = slotName;
+    updatePills();
+
+    overlay.classList.remove('active');
+  }, 400);
+}
+
+function updatePills() {
+  const pills = document.getElementById('schedulePills');
+  pills.innerHTML = SCHEDULE.map((slot, i) => {
+    const isActive = slot.moduleId === currentModuleId &&
+      SCHEDULE.indexOf(SCHEDULE.find(s => s.moduleId === currentModuleId)) === i;
+    // Determine active by current time
+    const hour = new Date().getHours();
+    const active = (slot.start < slot.end)
+      ? (hour >= slot.start && hour < slot.end)
+      : (hour >= slot.start || hour < slot.end);
+
+    return `<div class="schedule-pill ${active ? 'active' : 'upcoming'}">
+      ${slot.name} · ${formatHour(slot.start)}
+    </div>`;
+  }).join('');
+}
+
+function updateNextUp() {
+  const current = getScheduledSlot();
+  const next = getNextSlot(current);
+  document.getElementById('nextUpName').textContent = next.name;
+  document.getElementById('nextUpTime').textContent = formatHour(next.start);
+}
+
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  document.getElementById('liveClock').textContent = t;
+}
+
+function checkSchedule() {
+  if (overrideActive) return;
+  const slot = getScheduledSlot();
+  activateModule(slot.moduleId, slot.name);
+  updateNextUp();
+  updatePills();
+}
+
+// ── URL Override: ?module=teesheet or ?module=fnb
+function checkUrlOverride() {
+  const params = new URLSearchParams(window.location.search);
+  const mod = params.get('module');
+
+  // Demo mode via ?demo
+  if (params.has('demo')) {
+    enableDemoMode();
+    return;
+  }
+
+  if (mod) {
+    overrideActive = true;
+    const slot = SCHEDULE.find(s => s.moduleId === mod);
+    const name = slot ? slot.name : mod;
+    activateModule(mod, `${name} ✦ Override`);
+    document.getElementById('override-banner').style.display = 'block';
+
+    // ESC to cancel override
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        overrideActive = false;
+        document.getElementById('override-banner').style.display = 'none';
+        checkSchedule();
+      }
+    });
+  }
+}
+
+// Demo mode: cycles modules every DEMO_CYCLE_SECONDS
+function enableDemoMode() {
+  const uniqueModules = [...new Set(SCHEDULE.map(s => ({ moduleId: s.moduleId, name: s.name })))];
+  let idx = 0;
+  function cycleDemo() {
+    const slot = uniqueModules[idx % uniqueModules.length];
+    activateModule(slot.moduleId, slot.name + ' ✦ Demo');
+    idx++;
+  }
+  cycleDemo();
+  setInterval(cycleDemo, (DEMO_CYCLE_SECONDS || 12) * 1000);
+}
+
+// ── INIT
+function init() {
+  updateClock();
+  setInterval(updateClock, 1000);
+  setInterval(checkSchedule, 30000); // check schedule every 30s
+
+  // Hide loading screen after iframes settle
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+    checkUrlOverride();
+    if (!overrideActive) checkSchedule();
+  }, 1400);
+}
+
+init();
+</script>
+</body>
+</html>
