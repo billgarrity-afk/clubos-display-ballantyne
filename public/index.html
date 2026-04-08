@@ -25,9 +25,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hdr-left{display:flex;align-items:center;gap:20px;}
 .crest{width:52px;height:52px;border:1.5px solid var(--gold-mid);border-radius:50%;background:var(--gold-faint);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold);}
 .cname{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--white);letter-spacing:0.5px;line-height:1;}
-.csub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:4px;}
+.csub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-top:4px;transition:all 0.5s ease;}
 .hdr-mid{position:absolute;left:50%;transform:translateX(-50%);text-align:center;}
-.hlabel{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:500;}
+.hlabel{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:500;transition:all 0.5s ease;}
 .hdate{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--white);font-weight:500;letter-spacing:1px;margin-top:2px;}
 .hdr-right{display:flex;align-items:center;gap:32px;}
 .sync-b{text-align:right;}
@@ -40,23 +40,89 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ── FOOTER ── */
 .ftr{background:var(--bg-mid);border-top:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;padding:0 52px;position:relative;z-index:20;}
 .ftr-c{font-size:13px;color:var(--white-dim);letter-spacing:0.3px;}
-.pby{text-align:right;font-size:11px;color:rgba(242,237,227,0.28);letter-spacing:1px;}
-.pby strong{color:var(--gold);font-weight:600;letter-spacing:1.5px;}
+.pby{display:flex;align-items:center;gap:10px;}
+.pby-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(242,237,227,0.25);}
+.pby-wordmark{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--white);letter-spacing:0.3px;line-height:1;}
+.pby-wordmark .os{color:var(--gold);}
 
-/* ── LOADING ── */
-.ldo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:100;transition:opacity 0.7s ease;}
+/* ── LOADING SCREEN ── */
+.ldo{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);z-index:100;
+  transition:opacity 0.9s ease;
+  gap:0;
+}
 .ldo.gone{opacity:0;pointer-events:none;}
-.ld-logo{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;color:var(--gold);margin-bottom:24px;}
-.ld-bar-w{width:280px;height:3px;background:var(--white-faint);border-radius:2px;overflow:hidden;}
-.ld-bar{height:100%;background:linear-gradient(90deg,var(--gold-mid),var(--green-glow));animation:lda 1.8s ease-in-out infinite;}
-@keyframes lda{0%{width:0%;margin-left:0;}50%{width:70%;}100%{width:0%;margin-left:100%;}}
-.ld-txt{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--white-dim);margin-top:16px;}
+
+/* Grain on loading screen */
+.ldo::before{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:0.35;
+}
+
+/* Signal mark */
+.ld-mark{opacity:0;animation:markIn 0.35s ease 0.15s forwards;}
+@keyframes markIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.ld-mark svg .arc{stroke-linecap:round;fill:none;}
+.ld-mark svg .arc-1{stroke:var(--gold);stroke-width:10;opacity:1;}
+.ld-mark svg .arc-2{stroke:var(--gold);stroke-width:10;opacity:0.6;}
+.ld-mark svg .arc-3{stroke:var(--gold);stroke-width:10;opacity:0.3;}
+
+/* Wordmark */
+.ld-wordmark{
+  font-family:'Cormorant Garamond',serif;
+  font-size:52px;font-weight:500;
+  letter-spacing:2px;
+  color:var(--white);
+  opacity:0;
+  transform:translateY(10px);
+  animation:wordIn 0.5s ease 1.6s forwards;
+  margin-top:4px;
+  line-height:1;
+}
+.ld-wordmark .os{color:var(--gold);}
+@keyframes wordIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* Gold rule under wordmark */
+.ld-rule{
+  width:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin-top:12px;
+  animation:ruleIn 0.5s ease 1.9s forwards;
+}
+@keyframes ruleIn{from{width:0;opacity:0;}to{width:120px;opacity:1;}}
+
+/* Status line */
+.ld-status{
+  font-family:'DM Mono',monospace;
+  font-size:12px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--white-faint);
+  margin-top:20px;
+  opacity:0;
+  animation:statusIn 0.4s ease 2.2s forwards;
+  transition:opacity 0.3s ease;
+  height:18px;
+}
+@keyframes statusIn{from{opacity:0;}to{opacity:1;}}
 
 /* ── BODY WRAPPER ── */
 .body-b{display:flex;flex-direction:column;overflow:hidden;height:100%;position:relative;}
 
 /* ── COURT GRID ── */
 .grid-b{flex:1;overflow:hidden;padding:20px 48px 16px;display:grid;gap:16px;transition:opacity 0.5s ease;}
+
+/* ── EVENING MODE BANNER ── */
+.evening-banner{
+  display:none;position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  background:rgba(201,168,76,0.12);border:1px solid var(--gold-dim);border-radius:6px;
+  padding:8px 24px;z-index:10;align-items:center;gap:10px;
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;
+}
+.evening-banner.visible{display:flex;}
+.eve-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:0.7;}
 
 /* ── COURT CARDS ── */
 .card-b{background:var(--bg-card);border:1px solid var(--sep);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;animation:fi .4s ease both;}
@@ -68,6 +134,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .s-on{background:rgba(90,168,110,0.22);color:var(--green-glow);border:1px solid rgba(90,168,110,0.4);}
 .s-av{background:rgba(74,140,92,0.18);color:#6DC47F;border:1px solid rgba(74,140,92,0.4);}
 .s-bz{background:var(--gold-faint);color:var(--gold);border:1px solid var(--gold-dim);}
+.s-cl{background:rgba(242,237,227,0.05);color:var(--white-dim);border:1px solid rgba(242,237,227,0.12);}
 .card-body-b{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:6px 0;}
 .slot-b{padding:11px 26px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid rgba(242,237,227,0.05);}
 .slot-b:last-child{border-bottom:none;}
@@ -76,13 +143,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stm-b{font-family:'DM Mono',monospace;font-size:14px;color:var(--white-dim);letter-spacing:0.3px;}
 .snm-b.now{color:var(--green-glow);font-weight:600;}.stm-b.now{color:var(--green-glow);}
 .avail-b{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;color:#6DC47F;font-size:18px;font-weight:600;letter-spacing:0.5px;}
+.closed-b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0.5;}
+.closed-time{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white-dim);}
+.closed-lbl{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--white-faint);}
 .d-bk{background:var(--gold);box-shadow:0 0 5px var(--gold-mid);}
 .d-cl{background:var(--blue);}
 .d-bl{background:rgba(242,237,227,0.2);}
 .d-nw{background:var(--green-glow);box-shadow:0 0 7px var(--green-glow);animation:np 1.4s ease-in-out infinite;}
 @keyframes np{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* ── ANNOUNCEMENT FULL-SCREEN OVERLAY ── */
+/* ── ANNOUNCEMENT OVERLAY ── */
 .ann-overlay{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);opacity:0;pointer-events:none;transition:opacity 0.9s ease;}
 .ann-overlay::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(74,140,92,0.10),transparent 65%),radial-gradient(ellipse at 80% 80%,rgba(201,168,76,0.06),transparent 50%);pointer-events:none;}
 .ann-overlay.visible{opacity:1;pointer-events:auto;}
@@ -106,20 +176,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </head>
 <body>
 
+<!-- ── LOADING SCREEN ── -->
 <div class="ldo" id="ldo">
-  <div class="ld-logo">ClubOS</div>
-  <div class="ld-bar-w"><div class="ld-bar"></div></div>
-  <div class="ld-txt">Loading live court schedule…</div>
+
+  <!-- Signal Mark -->
+  <div class="ld-mark">
+    <svg id="signalMark" width="160" height="144" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path id="arc3" class="arc arc-3" d="M100 160 A88 88 0 0 1 188 72"/>
+      <path id="arc2" class="arc arc-2" d="M100 160 A56 56 0 0 1 156 104"/>
+      <path id="arc1" class="arc arc-1" d="M100 160 A28 28 0 0 1 128 132"/>
+      <circle id="originDot" cx="100" cy="160" r="6" fill="#C9A84C"/>
+    </svg>
+  </div>
+
+  <!-- Wordmark -->
+  <div class="ld-wordmark">Club<span class="os">OS</span></div>
+  <div class="ld-rule"></div>
+
+  <!-- Status -->
+  <div class="ld-status" id="ldStatus">Initializing</div>
+
 </div>
 
 <div class="display">
   <header class="hdr">
     <div class="hdr-left">
       <div class="crest">B</div>
-      <div><div class="cname">Ballantyne Country Club</div><div class="csub">Racquet Complex · Court Availability</div></div>
+      <div><div class="cname">Ballantyne Country Club</div><div class="csub" id="csub">Racquet Complex · Court Availability</div></div>
     </div>
     <div class="hdr-mid">
-      <div class="hlabel">Today's Schedule</div>
+      <div class="hlabel" id="hlabel">Today's Schedule</div>
       <div class="hdate" id="hdate">—</div>
     </div>
     <div class="hdr-right">
@@ -128,12 +214,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </header>
 
-  <!-- MAIN BODY -->
   <div class="body-b" id="bodyEl">
-    <!-- Court grid injected here -->
+    <div class="evening-banner" id="eveningBanner">
+      <div class="eve-dot"></div>
+      Tomorrow Morning Preview
+      <div class="eve-dot"></div>
+    </div>
     <div class="grid-b" id="gridB"></div>
 
-    <!-- announcement overlay — activates automatically when active announcements exist in ClubOS Studio -->
     <div class="ann-overlay" id="annOverlay">
       <div class="overlay-corner">
         <div class="oc-club">Ballantyne Country Club</div>
@@ -147,9 +235,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <footer class="ftr">
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:6px;height:6px;border-radius:50%;background:var(--green-glow);animation:np 1.4s ease-in-out infinite;"></div>
-      <span class="ftr-c">Court availability syncs live from Northstar · Reserve via the BCC App or Pro Shop</span>
+      <span class="ftr-c" id="ftrMsg">Court availability syncs live from Northstar · Reserve via the BCC App or Pro Shop</span>
     </div>
-    <div class="pby">Powered by <strong>ClubOS</strong> &nbsp;·&nbsp; clubhousectv.com</div>
+    <div class="pby">
+      <div class="pby-label">Powered by</div>
+      <!-- Small signal mark -->
+      <svg width="18" height="16" viewBox="0 0 200 180" fill="none" style="opacity:0.5;">
+        <path d="M100 160 A88 88 0 0 1 188 72" stroke="#C9A84C" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.3"/>
+        <path d="M100 160 A56 56 0 0 1 156 104" stroke="#C9A84C" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M100 160 A28 28 0 0 1 128 132" stroke="#C9A84C" stroke-width="14" stroke-linecap="round" fill="none" opacity="1"/>
+        <circle cx="100" cy="160" r="10" fill="#C9A84C"/>
+      </svg>
+      <div class="pby-wordmark">Club<span class="os">OS</span></div>
+    </div>
   </footer>
 </div>
 
@@ -159,23 +257,50 @@ const SB    = 'https://ykfvwqewnfnibpzytspn.supabase.co';
 const SK    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrZnZ3cWV3bmZuaWJwenl0c3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MjE2NzYsImV4cCI6MjA5MDM5NzY3Nn0.cnMztZVHDV3Hof-26aRi4NIM7wKwjzxAfoMBR3oItms';
 const NS    = 'https://northstar.ballantyneclub.com/northstar/Sports/newTeeSheet.do?activityDisplaySystem=1&stationId=northstar';
 
-// Layout B is default. URL param ?layout=a switches to Layout A if needed.
-const LAY = new URLSearchParams(location.search).get('layout') || 'b';
-
 let courts = [], anns = [];
+const COURTS_HOLD = 28000, ANN_HOLD = 10000;
+let cycleTimer = null, annSlideIdx = 0;
 
-// ── DISPLAY CYCLE (full-screen announcements) ────────────
-const COURTS_HOLD = 28000;
-const ANN_HOLD    = 10000;
-let cycleTimer    = null;
-let annSlideIdx   = 0;
+// ── LOADING SCREEN ANIMATION ──────────────────────────────
+function animateArc(el, delay, duration) {
+  const len = el.getTotalLength();
+  el.style.strokeDasharray = len;
+  el.style.strokeDashoffset = len;
+  el.style.transition = 'none';
+  setTimeout(() => {
+    el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.4,0,0.2,1)`;
+    el.style.strokeDashoffset = '0';
+  }, delay);
+}
 
+window.addEventListener('load', () => {
+  animateArc(document.getElementById('arc1'), 500,  420);
+  animateArc(document.getElementById('arc2'), 820,  460);
+  animateArc(document.getElementById('arc3'), 1140, 500);
+});
+
+// Status line cycle
+const statusEl = document.getElementById('ldStatus');
+const statusSteps = ['Initializing', 'Loading Content', 'System Ready'];
+let statusStep = 0;
+setTimeout(() => {
+  const t = setInterval(() => {
+    statusStep++;
+    if (statusStep >= statusSteps.length) { clearInterval(t); return; }
+    statusEl.style.opacity = '0';
+    setTimeout(() => {
+      statusEl.textContent = statusSteps[statusStep];
+      statusEl.style.opacity = '1';
+    }, 300);
+  }, 850);
+}, 2400);
+
+// ── ANNOUNCEMENT CYCLE ────────────────────────────────────
 function startCycle() {
-  if (anns.length === 0) return; // no active announcements — courts stay static, nothing moves
+  if (!anns.length) return;
   clearTimeout(cycleTimer);
   cycleTimer = setTimeout(showNextAnn, COURTS_HOLD);
 }
-
 function showNextAnn() {
   const overlay = document.getElementById('annOverlay');
   if (!overlay || !anns.length) return;
@@ -183,47 +308,36 @@ function showNextAnn() {
   showAnnSlide(annSlideIdx);
   cycleTimer = setTimeout(() => {
     annSlideIdx = (annSlideIdx + 1) % anns.length;
-    if (annSlideIdx === 0) {
-      overlay.classList.remove('visible');
-      cycleTimer = setTimeout(showNextAnn, COURTS_HOLD);
-    } else {
-      showNextAnn();
-    }
+    if (annSlideIdx === 0) { overlay.classList.remove('visible'); cycleTimer = setTimeout(showNextAnn, COURTS_HOLD); }
+    else showNextAnn();
   }, ANN_HOLD);
 }
-
 function showAnnSlide(idx) {
-  const slides = document.querySelectorAll('.ann-slide');
-  const dots   = document.querySelectorAll('.ann-dot');
-  slides.forEach((s, i) => {
+  document.querySelectorAll('.ann-slide').forEach((s, i) => {
     if (i === idx) { s.classList.remove('exiting'); s.classList.add('active'); }
     else { s.classList.remove('active'); s.classList.add('exiting'); }
   });
-  dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  document.querySelectorAll('.ann-dot').forEach((d, i) => d.classList.toggle('on', i === idx));
 }
-
 function buildOverlay() {
-  const overlay  = document.getElementById('annOverlay');
+  const overlay = document.getElementById('annOverlay');
   const slidesEl = document.getElementById('annSlides');
-  const dotsEl   = document.getElementById('annDots');
-  if (!slidesEl || !dotsEl) return;
+  const dotsEl = document.getElementById('annDots');
   if (!anns.length) { overlay.classList.remove('visible'); return; }
-  slidesEl.innerHTML = anns.map((a, i) => `
+  slidesEl.innerHTML = anns.map(a => `
     <div class="ann-slide">
       <div class="ann-rule"></div>
       <div class="ann-eyebrow">Member Announcement</div>
       <div class="ann-icon">${a.icon || '📢'}</div>
       <div class="ann-title">${a.title || ''}</div>
       ${a.body ? `<div class="ann-body">${a.body}</div>` : ''}
-      ${a.from  ? `<div class="ann-date">${fmtDate(a.from)}${a.until && a.until !== a.from ? ' – ' + fmtDate(a.until) : ''}</div>` : ''}
+      ${a.from ? `<div class="ann-date">${fmtDate(a.from)}${a.until && a.until !== a.from ? ' – ' + fmtDate(a.until) : ''}</div>` : ''}
       <div class="ann-rule-bot"></div>
     </div>`).join('');
-  dotsEl.innerHTML = anns.length > 1
-    ? anns.map((_, i) => `<div class="ann-dot" id="adot${i}"></div>`).join('')
-    : '';
+  dotsEl.innerHTML = anns.length > 1 ? anns.map((_, i) => `<div class="ann-dot"></div>`).join('') : '';
 }
 
-// ── CLOCK ────────────────────────────────────────────────
+// ── CLOCK ─────────────────────────────────────────────────
 function tick() {
   const n = new Date(), h = n.getHours() % 12 || 12, m = String(n.getMinutes()).padStart(2,'0'), ap = n.getHours() >= 12 ? 'PM' : 'AM';
   document.getElementById('clkt').textContent = h + ':' + m;
@@ -232,111 +346,121 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 
-// ── TIME UTILS ───────────────────────────────────────────
-function to24(t) { if (!t) return -1; const m = t.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i); if (!m) return -1; let h = parseInt(m[1]); const mn = parseInt(m[2]), ap = m[3].toUpperCase(); if (ap === 'PM' && h !== 12) h += 12; if (ap === 'AM' && h === 12) h = 0; return h * 60 + mn; }
-function nm() { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
-function isCur(s, e) { const nv = nm(), sv = to24(s), ev = to24(e); return sv >= 0 && ev > 0 && nv >= sv && nv < ev; }
-function isPast(e) { const ev = to24(e); return ev > 0 && ev <= nm(); }
-function fmtr(s, e) { return (s && e && s !== e) ? s + ' – ' + e : (s || ''); }
-function sortC(a, b) { return (parseInt(a.name.match(/\d+/)?.[0] || 0)) - (parseInt(b.name.match(/\d+/)?.[0] || 0)); }
-function fmtDate(d) { if (!d) return ''; try { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch(e) { return d; } }
+// ── TIME UTILS ────────────────────────────────────────────
+function to24(t){if(!t)return -1;const m=t.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);if(!m)return -1;let h=parseInt(m[1]);const mn=parseInt(m[2]),ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return h*60+mn;}
+function nm(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function isCur(s,e){const nv=nm(),sv=to24(s),ev=to24(e);return sv>=0&&ev>0&&nv>=sv&&nv<ev;}
+function isPast(e){const ev=to24(e);return ev>0&&ev<=nm();}
+function fmtr(s,e){return(s&&e&&s!==e)?s+' – '+e:(s||'');}
+function sortC(a,b){return(parseInt(a.name.match(/\d+/)?.[0]||0))-(parseInt(b.name.match(/\d+/)?.[0]||0));}
+function fmtDate(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}catch(e){return d;}}
 
-// ── DATA CLEANUP ─────────────────────────────────────────
+// ── DATA CLEANUP ──────────────────────────────────────────
 function cleanData(data) {
   for (const court of data.courts || []) {
     if (court.sport === 'tennis') court.bookings = (court.bookings || []).filter(b => !b.label.toUpperCase().includes('PICKLEBALL'));
     court.bookings = (court.bookings || []).map(b => {
       let lbl = b.label || '';
-      lbl = lbl.replace(/\s*Capacity\s*:.*$/i, '').replace(/\s*Reserved?\s*:.*$/i, '').trim();
-      if (lbl.match(/^\d{1,2}:\d{2}\s*[AP]M/i) || lbl.length < 2) lbl = b.type === 'booked' ? 'Reserved' : b.type === 'blocked' ? 'Court Closed' : 'Clinic';
-      if (lbl === lbl.toUpperCase() && lbl.length > 4) lbl = lbl.charAt(0) + lbl.slice(1).toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
-      return { ...b, label: lbl };
-    }).filter(b => b.label && b.label.length > 1);
+      lbl = lbl.replace(/\s*Capacity\s*:.*$/i,'').replace(/\s*Reserved?\s*:.*$/i,'').trim();
+      if (lbl.match(/^\d{1,2}:\d{2}\s*[AP]M/i) || lbl.length < 2) lbl = b.type==='booked'?'Reserved':b.type==='blocked'?'Court Closed':'Clinic';
+      if (lbl===lbl.toUpperCase()&&lbl.length>4) lbl=lbl.charAt(0)+lbl.slice(1).toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
+      return {...b,label:lbl};
+    }).filter(b=>b.label&&b.label.length>1);
   }
   return data;
 }
 
-// ── LOAD DATA ────────────────────────────────────────────
-async function loadAll() {
-  // Announcements from ClubOS Studio — overlay only appears when active ones exist
-  try {
-    const r = await fetch(`${SB}/rest/v1/club_content?club_id=eq.ballantyne-cc&select=data&limit=1`, { headers: { 'apikey': SK, 'Authorization': `Bearer ${SK}` } });
-    const rows = await r.json();
-    if (rows?.[0]?.data?.announcements) {
-      const today = new Date().toISOString().split('T')[0];
-      anns = rows[0].data.announcements.filter(a =>
-        a.status === 'active' ||
-        (a.status === 'scheduled' && a.from <= today && (!a.until || a.until >= today))
-      );
-    }
-  } catch(e) {}
-
-  // Courts — graceful fallback if proxy unavailable
-  try {
-    const r = await fetch(PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: NS }) });
-    if (!r.ok) throw new Error('proxy error');
-    const d = await r.json();
-    if (d.courts) courts = cleanData(d).courts;
-  } catch(e) {
-    console.log('Court data unavailable — rendering shell');
-  }
-
-  renderB();
-  buildOverlay();
-  startCycle();
-  document.getElementById('synct').textContent = courts.length
-    ? new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    : 'Connecting…';
-  document.getElementById('ldo').classList.add('gone');
+// ── EVENING MODE ──────────────────────────────────────────
+function isEveningMode() {
+  return courts.length > 0 && !courts.some(c => (c.bookings||[]).some(b => !isPast(b.endTime)));
 }
-
-// ── RENDER LAYOUT B ──────────────────────────────────────
-function renderB() {
-  const ten = courts.filter(c => c.sport === 'tennis').sort(sortC);
-  const pic = courts.filter(c => c.sport === 'pickleball').sort(sortC);
-  const all = [...ten, ...pic];
-
-  // Determine grid: ≤5 courts = single row; >5 = two rows, top row gets the larger share
-  const total = all.length;
-  const cols  = total <= 5 ? total : Math.ceil(total / 2);
-
-  const grid = document.getElementById('gridB');
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  grid.innerHTML = '';
-
-  all.forEach(court => {
-    const rel    = (court.bookings || []).filter(b => !isPast(b.endTime)).slice(0, 4);
-    const hasNow = rel.some(b => isCur(b.startTime, b.endTime));
-    const sc     = hasNow ? 's-on' : rel.length ? 's-bz' : 's-av';
-    const sl     = hasNow ? 'On Court' : rel.length ? rel.length + ' Booked' : 'Available';
-
-    const sh = rel.length === 0
-      ? `<div class="avail-b">✦ &nbsp;Available Now</div>`
-      : rel.map(b => {
-          const now = isCur(b.startTime, b.endTime);
-          const dc  = now ? 'd-nw' : b.type === 'booked' ? 'd-bk' : b.type === 'clinic' ? 'd-cl' : 'd-bl';
-          return `<div class="slot-b">
-            <div class="sd-b ${dc}"></div>
-            <div>
-              <div class="snm-b ${now ? 'now' : ''}">${b.label}</div>
-              <div class="stm-b ${now ? 'now' : ''}">${fmtr(b.startTime, b.endTime)}</div>
-            </div>
-          </div>`;
-        }).join('');
-
-    const card = document.createElement('div');
-    card.className = 'card-b';
-    card.innerHTML = `
-      <div class="card-hdr-b">
-        <div class="card-nm-b">${court.name}</div>
-        <span class="card-st-b ${sc}">${sl}</span>
-      </div>
-      <div class="card-body-b">${sh}</div>`;
+async function activateEveningMode() {
+  document.getElementById('csub').textContent = 'Racquet Complex · Tomorrow Morning';
+  document.getElementById('hlabel').textContent = "Tomorrow's Schedule";
+  document.getElementById('ftrMsg').textContent = 'Courts closed for the evening · Reserve for tomorrow via the BCC App or Pro Shop';
+  document.getElementById('eveningBanner').classList.add('visible');
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const iso = tomorrow.toISOString().split('T')[0];
+  document.getElementById('hdate').textContent = tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  let tomorrowCourts = null;
+  for (const url of [`${NS}&scheduleDate=${iso}`, `${NS}&date=${iso}`, `${NS}&forDate=${iso}`]) {
+    try {
+      const r = await fetch(PROXY, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (d.courts?.some(c => c.bookings?.length > 0)) {
+        tomorrowCourts = cleanData(d).courts.map(c => ({...c, bookings:(c.bookings||[]).filter(b=>to24(b.startTime)<720)}));
+        break;
+      }
+    } catch(e) { continue; }
+  }
+  if (tomorrowCourts?.some(c => c.bookings?.length)) { courts = tomorrowCourts; renderB(); }
+  else renderClosedFallback();
+}
+function renderClosedFallback() {
+  const ten=courts.filter(c=>c.sport==='tennis').sort(sortC);
+  const pic=courts.filter(c=>c.sport==='pickleball').sort(sortC);
+  const all=[...ten,...pic];
+  const grid=document.getElementById('gridB');
+  grid.style.gridTemplateColumns=`repeat(${all.length<=5?all.length:Math.ceil(all.length/2)},1fr)`;
+  grid.innerHTML='';
+  all.forEach(court=>{
+    const card=document.createElement('div');card.className='card-b';
+    card.innerHTML=`<div class="card-hdr-b"><div class="card-nm-b">${court.name}</div><span class="card-st-b s-cl">Closed</span></div><div class="card-body-b"><div class="closed-b"><div class="closed-time">Opens 7:00 AM</div><div class="closed-lbl">Reserve via BCC App</div></div></div>`;
     grid.appendChild(card);
   });
 }
 
-// ── INIT ─────────────────────────────────────────────────
+// ── LOAD DATA ─────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const r = await fetch(`${SB}/rest/v1/club_content?club_id=eq.ballantyne-cc&select=data&limit=1`,{headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}});
+    const rows = await r.json();
+    if (rows?.[0]?.data?.announcements) {
+      const today = new Date().toISOString().split('T')[0];
+      anns = rows[0].data.announcements.filter(a=>a.status==='active'||(a.status==='scheduled'&&a.from<=today&&(!a.until||a.until>=today)));
+    }
+  } catch(e){}
+  try {
+    const r = await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:NS})});
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    if (d.courts) courts = cleanData(d).courts;
+  } catch(e){ console.log('Court data unavailable'); }
+  renderB();
+  if (isEveningMode()) await activateEveningMode();
+  buildOverlay();
+  startCycle();
+  document.getElementById('synct').textContent = courts.length
+    ? new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})
+    : 'Connecting…';
+  document.getElementById('ldo').classList.add('gone');
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function renderB() {
+  const ten=courts.filter(c=>c.sport==='tennis').sort(sortC);
+  const pic=courts.filter(c=>c.sport==='pickleball').sort(sortC);
+  const all=[...ten,...pic];
+  const total=all.length, cols=total<=5?total:Math.ceil(total/2);
+  const grid=document.getElementById('gridB');
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML='';
+  all.forEach(court=>{
+    const rel=(court.bookings||[]).filter(b=>!isPast(b.endTime)).slice(0,4);
+    const hasNow=rel.some(b=>isCur(b.startTime,b.endTime));
+    const sc=hasNow?'s-on':rel.length?'s-bz':'s-av';
+    const sl=hasNow?'On Court':rel.length?rel.length+' Booked':'Available';
+    const sh=rel.length===0
+      ?`<div class="avail-b">✦ &nbsp;Available Now</div>`
+      :rel.map(b=>{const now=isCur(b.startTime,b.endTime);const dc=now?'d-nw':b.type==='booked'?'d-bk':b.type==='clinic'?'d-cl':'d-bl';return`<div class="slot-b"><div class="sd-b ${dc}"></div><div><div class="snm-b ${now?'now':''}">${b.label}</div><div class="stm-b ${now?'now':''}">${fmtr(b.startTime,b.endTime)}</div></div></div>`;}).join('');
+    const card=document.createElement('div');card.className='card-b';
+    card.innerHTML=`<div class="card-hdr-b"><div class="card-nm-b">${court.name}</div><span class="card-st-b ${sc}">${sl}</span></div><div class="card-body-b">${sh}</div>`;
+    grid.appendChild(card);
+  });
+}
+
 loadAll();
 setInterval(loadAll, 60000);
 </script>
