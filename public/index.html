@@ -152,6 +152,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .d-nw{background:var(--green-glow);box-shadow:0 0 7px var(--green-glow);animation:np 1.4s ease-in-out infinite;}
 @keyframes np{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
+/* ── NO-DATA CLOSED STATE (full-screen fallback) ── */
+.nodata-wrap{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px;background:var(--bg-card);border:1px solid var(--sep);border-radius:var(--r);
+  margin:4px;animation:fi .5s ease both;position:relative;overflow:hidden;
+}
+.nodata-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,0.06),transparent 60%);
+  pointer-events:none;
+}
+.nodata-title{font-family:'Cormorant Garamond',serif;font-size:96px;font-weight:600;color:var(--white);letter-spacing:1px;line-height:1;margin-bottom:24px;position:relative;}
+.nodata-rule{width:100px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin-bottom:32px;}
+.nodata-hours{font-size:26px;color:var(--white-dim);margin-bottom:44px;letter-spacing:0.5px;font-weight:300;}
+.nodata-cta{font-family:'DM Mono',monospace;font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+
 /* ── ANNOUNCEMENT OVERLAY ── */
 .ann-overlay{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);opacity:0;pointer-events:none;transition:opacity 0.9s ease;}
 .ann-overlay::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(74,140,92,0.10),transparent 65%),radial-gradient(ellipse at 80% 80%,rgba(201,168,76,0.06),transparent 50%);pointer-events:none;}
@@ -257,6 +273,11 @@ const SB    = 'https://ykfvwqewnfnibpzytspn.supabase.co';
 const SK    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrZnZ3cWV3bmZuaWJwenl0c3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MjE2NzYsImV4cCI6MjA5MDM5NzY3Nn0.cnMztZVHDV3Hof-26aRi4NIM7wKwjzxAfoMBR3oItms';
 const NS    = 'https://northstar.ballantyneclub.com/northstar/Sports/newTeeSheet.do?activityDisplaySystem=1&stationId=northstar';
 
+// ── VENUE HOURS CONFIG ────────────────────────────────────
+// Adjust these if Ballantyne's hours change — everything else auto-derives.
+const OPEN_HOUR  = 7;   // 7 AM
+const CLOSE_HOUR = 21;  // 9 PM
+
 let courts = [], anns = [];
 const COURTS_HOLD = 28000, ANN_HOLD = 10000;
 let cycleTimer = null, annSlideIdx = 0;
@@ -355,6 +376,17 @@ function fmtr(s,e){return(s&&e&&s!==e)?s+' – '+e:(s||'');}
 function sortC(a,b){return(parseInt(a.name.match(/\d+/)?.[0]||0))-(parseInt(b.name.match(/\d+/)?.[0]||0));}
 function fmtDate(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}catch(e){return d;}}
 
+// ── AFTER-HOURS CHECK ─────────────────────────────────────
+function isAfterHours() {
+  const h = new Date().getHours();
+  return h >= CLOSE_HOUR || h < OPEN_HOUR;
+}
+function formatHour(h) {
+  const ap = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return h12 + ':00 ' + ap;
+}
+
 // ── DATA CLEANUP ──────────────────────────────────────────
 function cleanData(data) {
   for (const court of data.courts || []) {
@@ -407,9 +439,44 @@ function renderClosedFallback() {
   grid.innerHTML='';
   all.forEach(court=>{
     const card=document.createElement('div');card.className='card-b';
-    card.innerHTML=`<div class="card-hdr-b"><div class="card-nm-b">${court.name}</div><span class="card-st-b s-cl">Closed</span></div><div class="card-body-b"><div class="closed-b"><div class="closed-time">Opens 7:00 AM</div><div class="closed-lbl">Reserve via BCC App</div></div></div>`;
+    card.innerHTML=`<div class="card-hdr-b"><div class="card-nm-b">${court.name}</div><span class="card-st-b s-cl">Closed</span></div><div class="card-body-b"><div class="closed-b"><div class="closed-time">Opens ${formatHour(OPEN_HOUR)}</div><div class="closed-lbl">Reserve via BCC App</div></div></div>`;
     grid.appendChild(card);
   });
+}
+
+// ── NO-DATA CLOSED STATE ──────────────────────────────────
+// Triggers when Northstar returns zero court data AT ALL (the blank-screen bug).
+// Time-aware: after-hours → "Courts Closed", during-hours → friendly reconnect state.
+// Works with zero data — no club input required.
+function renderNoDataState() {
+  const afterHours = isAfterHours();
+  const grid = document.getElementById('gridB');
+  const banner = document.getElementById('eveningBanner');
+
+  if (afterHours) {
+    document.getElementById('csub').textContent = 'Racquet Complex · Closed for the Evening';
+    document.getElementById('hlabel').textContent = "Tomorrow's Hours";
+    document.getElementById('ftrMsg').textContent = 'Courts closed for the evening · Reserve for tomorrow via the BCC App or Pro Shop';
+    banner.classList.add('visible');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('hdate').textContent = tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  } else {
+    document.getElementById('csub').textContent = 'Racquet Complex · Court Availability';
+    document.getElementById('hlabel').textContent = "Today's Schedule";
+    document.getElementById('ftrMsg').textContent = 'Refreshing court availability · Reserve via the BCC App or Pro Shop';
+    banner.classList.remove('visible');
+  }
+
+  grid.style.gridTemplateColumns = '1fr';
+  grid.innerHTML = `
+    <div class="nodata-wrap">
+      <div class="nodata-title">${afterHours ? 'Courts Closed' : 'Court Availability'}</div>
+      <div class="nodata-rule"></div>
+      <div class="nodata-hours">${afterHours ? `Open Daily · ${formatHour(OPEN_HOUR)} – ${formatHour(CLOSE_HOUR)}` : 'Refreshing reservations…'}</div>
+      <div class="nodata-cta">Reserve via BCC App or Pro Shop</div>
+    </div>
+  `;
 }
 
 // ── LOAD DATA ─────────────────────────────────────────────
@@ -428,13 +495,23 @@ async function loadAll() {
     const d = await r.json();
     if (d.courts) courts = cleanData(d).courts;
   } catch(e){ console.log('Court data unavailable'); }
+
+  // ── FIX: if Northstar returned zero data, render closed/reconnecting state
+  // instead of letting renderB() draw an empty grid.
+  if (!courts.length) {
+    renderNoDataState();
+    buildOverlay();
+    startCycle();
+    document.getElementById('synct').textContent = isAfterHours() ? 'Closed' : 'Reconnecting…';
+    document.getElementById('ldo').classList.add('gone');
+    return;
+  }
+
   renderB();
   if (isEveningMode()) await activateEveningMode();
   buildOverlay();
   startCycle();
-  document.getElementById('synct').textContent = courts.length
-    ? new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})
-    : 'Connecting…';
+  document.getElementById('synct').textContent = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
   document.getElementById('ldo').classList.add('gone');
 }
 
