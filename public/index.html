@@ -496,9 +496,10 @@ async function loadAll() {
     if (d.courts) courts = cleanData(d).courts;
   } catch(e){ console.log('Court data unavailable'); }
 
-  // ── FIX: if Northstar returned zero data, render closed/reconnecting state
-  // instead of letting renderB() draw an empty grid.
-  if (!courts.length) {
+  // ── FIX: after-hours takes priority over everything.
+  // After CLOSE_HOUR or before OPEN_HOUR → always show "Courts Closed" panel,
+  // regardless of what Northstar returns. Also covers the zero-data case.
+  if (isAfterHours() || !courts.length) {
     renderNoDataState();
     buildOverlay();
     startCycle();
