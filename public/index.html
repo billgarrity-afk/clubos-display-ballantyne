@@ -37,6 +37,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .clock-t{font-family:'DM Mono',monospace;font-size:36px;color:var(--white);letter-spacing:2px;line-height:1;}
 .clock-s{font-size:12px;color:var(--white-dim);letter-spacing:1px;margin-top:3px;}
 
+/* ── SYNC HEALTH INDICATOR ── */
+.sync-health{display:flex;align-items:center;gap:8px;border-left:1px solid var(--sep);padding-left:28px;}
+.sync-health-dot{width:10px;height:10px;border-radius:50%;background:var(--green-glow);animation:np 1.4s ease-in-out infinite;transition:background 0.5s ease,box-shadow 0.5s ease;flex-shrink:0;}
+.sync-health-dot.stale{background:#C94C4C;box-shadow:0 0 8px rgba(201,76,76,0.6);animation:none;}
+.sync-health-text{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--white-faint);line-height:1.3;}
+.sync-health-text.stale{color:#C94C4C;}
+
 /* ── FOOTER ── */
 .ftr{background:var(--bg-mid);border-top:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;padding:0 52px;position:relative;z-index:20;}
 .ftr-c{font-size:13px;color:var(--white-dim);letter-spacing:0.3px;}
@@ -46,66 +53,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pby-wordmark .os{color:var(--gold);}
 
 /* ── LOADING SCREEN ── */
-.ldo{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:var(--bg);z-index:100;
-  transition:opacity 0.9s ease;
-  gap:0;
-}
+.ldo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:100;transition:opacity 0.9s ease;gap:0;}
 .ldo.gone{opacity:0;pointer-events:none;}
-
-/* Grain on loading screen */
-.ldo::before{
-  content:'';position:absolute;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events:none;opacity:0.35;
-}
-
-/* Signal mark */
+.ldo::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;opacity:0.35;}
 .ld-mark{opacity:0;animation:markIn 0.35s ease 0.15s forwards;}
 @keyframes markIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-
 .ld-mark svg .arc{stroke-linecap:round;fill:none;}
 .ld-mark svg .arc-1{stroke:var(--gold);stroke-width:10;opacity:1;}
 .ld-mark svg .arc-2{stroke:var(--gold);stroke-width:10;opacity:0.6;}
 .ld-mark svg .arc-3{stroke:var(--gold);stroke-width:10;opacity:0.3;}
-
-/* Wordmark */
-.ld-wordmark{
-  font-family:'Cormorant Garamond',serif;
-  font-size:52px;font-weight:500;
-  letter-spacing:2px;
-  color:var(--white);
-  opacity:0;
-  transform:translateY(10px);
-  animation:wordIn 0.5s ease 1.6s forwards;
-  margin-top:4px;
-  line-height:1;
-}
+.ld-wordmark{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:500;letter-spacing:2px;color:var(--white);opacity:0;transform:translateY(10px);animation:wordIn 0.5s ease 1.6s forwards;margin-top:4px;line-height:1;}
 .ld-wordmark .os{color:var(--gold);}
 @keyframes wordIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-
-/* Gold rule under wordmark */
-.ld-rule{
-  width:0;height:1.5px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  margin-top:12px;
-  animation:ruleIn 0.5s ease 1.9s forwards;
-}
+.ld-rule{width:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin-top:12px;animation:ruleIn 0.5s ease 1.9s forwards;}
 @keyframes ruleIn{from{width:0;opacity:0;}to{width:120px;opacity:1;}}
-
-/* Status line */
-.ld-status{
-  font-family:'DM Mono',monospace;
-  font-size:12px;letter-spacing:3px;text-transform:uppercase;
-  color:var(--white-faint);
-  margin-top:20px;
-  opacity:0;
-  animation:statusIn 0.4s ease 2.2s forwards;
-  transition:opacity 0.3s ease;
-  height:18px;
-}
+.ld-status{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--white-faint);margin-top:20px;opacity:0;animation:statusIn 0.4s ease 2.2s forwards;transition:opacity 0.3s ease;height:18px;}
 @keyframes statusIn{from{opacity:0;}to{opacity:1;}}
 
 /* ── BODY WRAPPER ── */
@@ -115,12 +77,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .grid-b{flex:1;overflow:hidden;padding:20px 48px 16px;display:grid;gap:16px;transition:opacity 0.5s ease;}
 
 /* ── EVENING MODE BANNER ── */
-.evening-banner{
-  display:none;position:absolute;top:16px;left:50%;transform:translateX(-50%);
-  background:rgba(201,168,76,0.12);border:1px solid var(--gold-dim);border-radius:6px;
-  padding:8px 24px;z-index:10;align-items:center;gap:10px;
-  font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;
-}
+.evening-banner{display:none;position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(201,168,76,0.12);border:1px solid var(--gold-dim);border-radius:6px;padding:8px 24px;z-index:10;align-items:center;gap:10px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;}
 .evening-banner.visible{display:flex;}
 .eve-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:0.7;}
 
@@ -152,17 +109,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .d-nw{background:var(--green-glow);box-shadow:0 0 7px var(--green-glow);animation:np 1.4s ease-in-out infinite;}
 @keyframes np{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* ── NO-DATA CLOSED STATE (full-screen fallback) ── */
-.nodata-wrap{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px;background:var(--bg-card);border:1px solid var(--sep);border-radius:var(--r);
-  margin:4px;animation:fi .5s ease both;position:relative;overflow:hidden;
-}
-.nodata-wrap::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,0.06),transparent 60%);
-  pointer-events:none;
-}
+/* ── NO-DATA CLOSED STATE ── */
+.nodata-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;background:var(--bg-card);border:1px solid var(--sep);border-radius:var(--r);margin:4px;animation:fi .5s ease both;position:relative;overflow:hidden;}
+.nodata-wrap::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,0.06),transparent 60%);pointer-events:none;}
 .nodata-title{font-family:'Cormorant Garamond',serif;font-size:96px;font-weight:600;color:var(--white);letter-spacing:1px;line-height:1;margin-bottom:24px;position:relative;}
 .nodata-rule{width:100px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin-bottom:32px;}
 .nodata-hours{font-size:26px;color:var(--white-dim);margin-bottom:44px;letter-spacing:0.5px;font-weight:300;}
@@ -194,8 +143,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <!-- ── LOADING SCREEN ── -->
 <div class="ldo" id="ldo">
-
-  <!-- Signal Mark -->
   <div class="ld-mark">
     <svg id="signalMark" width="160" height="144" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path id="arc3" class="arc arc-3" d="M100 160 A88 88 0 0 1 188 72"/>
@@ -204,14 +151,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <circle id="originDot" cx="100" cy="160" r="6" fill="#C9A84C"/>
     </svg>
   </div>
-
-  <!-- Wordmark -->
   <div class="ld-wordmark">Club<span class="os">OS</span></div>
   <div class="ld-rule"></div>
-
-  <!-- Status -->
   <div class="ld-status" id="ldStatus">Initializing</div>
-
 </div>
 
 <div class="display">
@@ -226,6 +168,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="hdr-right">
       <div class="sync-b"><div class="sync-lbl">Last Sync</div><div class="sync-t" id="synct">—</div></div>
+      <!-- ── SYNC HEALTH INDICATOR ── -->
+      <div class="sync-health" id="syncHealth">
+        <div class="sync-health-dot" id="syncDot"></div>
+        <div class="sync-health-text" id="syncHealthText">Live</div>
+      </div>
       <div class="clock-b"><div class="clock-t" id="clkt">12:00</div><div class="clock-s" id="clks">PM</div></div>
     </div>
   </header>
@@ -237,7 +184,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="eve-dot"></div>
     </div>
     <div class="grid-b" id="gridB"></div>
-
     <div class="ann-overlay" id="annOverlay">
       <div class="overlay-corner">
         <div class="oc-club">Ballantyne Country Club</div>
@@ -255,7 +201,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="pby">
       <div class="pby-label">Powered by</div>
-      <!-- Small signal mark -->
       <svg width="18" height="16" viewBox="0 0 200 180" fill="none" style="opacity:0.5;">
         <path d="M100 160 A88 88 0 0 1 188 72" stroke="#C9A84C" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.3"/>
         <path d="M100 160 A56 56 0 0 1 156 104" stroke="#C9A84C" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.6"/>
@@ -273,14 +218,33 @@ const SB    = 'https://ykfvwqewnfnibpzytspn.supabase.co';
 const SK    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrZnZ3cWV3bmZuaWJwenl0c3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MjE2NzYsImV4cCI6MjA5MDM5NzY3Nn0.cnMztZVHDV3Hof-26aRi4NIM7wKwjzxAfoMBR3oItms';
 const NS    = 'https://northstar.ballantyneclub.com/northstar/Sports/newTeeSheet.do?activityDisplaySystem=1&stationId=northstar';
 
-// ── VENUE HOURS CONFIG ────────────────────────────────────
-// Adjust these if Ballantyne's hours change — everything else auto-derives.
-const OPEN_HOUR  = 7;   // 7 AM
-const CLOSE_HOUR = 21;  // 9 PM
+const OPEN_HOUR  = 7;
+const CLOSE_HOUR = 21;
+const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 let courts = [], anns = [];
 const COURTS_HOLD = 28000, ANN_HOLD = 10000;
 let cycleTimer = null, annSlideIdx = 0;
+let lastSuccessfulSync = null; // tracks last good data fetch
+
+// ── SYNC HEALTH INDICATOR ─────────────────────────────────
+function updateSyncHealth() {
+  const dot  = document.getElementById('syncDot');
+  const text = document.getElementById('syncHealthText');
+  if (!dot || !text) return;
+  const isStale = !lastSuccessfulSync || (Date.now() - lastSuccessfulSync) > STALE_THRESHOLD_MS;
+  if (isStale) {
+    dot.classList.add('stale');
+    text.classList.add('stale');
+    text.textContent = 'Sync Error';
+  } else {
+    dot.classList.remove('stale');
+    text.classList.remove('stale');
+    text.textContent = 'Live';
+  }
+}
+// Check health every 30 seconds independently of data fetch
+setInterval(updateSyncHealth, 30000);
 
 // ── LOADING SCREEN ANIMATION ──────────────────────────────
 function animateArc(el, delay, duration) {
@@ -293,14 +257,12 @@ function animateArc(el, delay, duration) {
     el.style.strokeDashoffset = '0';
   }, delay);
 }
-
 window.addEventListener('load', () => {
   animateArc(document.getElementById('arc1'), 500,  420);
   animateArc(document.getElementById('arc2'), 820,  460);
   animateArc(document.getElementById('arc3'), 1140, 500);
 });
 
-// Status line cycle
 const statusEl = document.getElementById('ldStatus');
 const statusSteps = ['Initializing', 'Loading Content', 'System Ready'];
 let statusStep = 0;
@@ -444,15 +406,11 @@ function renderClosedFallback() {
   });
 }
 
-// ── NO-DATA CLOSED STATE ──────────────────────────────────
-// Triggers when Northstar returns zero court data AT ALL (the blank-screen bug).
-// Time-aware: after-hours → "Courts Closed", during-hours → friendly reconnect state.
-// Works with zero data — no club input required.
+// ── NO-DATA STATE ─────────────────────────────────────────
 function renderNoDataState() {
   const afterHours = isAfterHours();
   const grid = document.getElementById('gridB');
   const banner = document.getElementById('eveningBanner');
-
   if (afterHours) {
     document.getElementById('csub').textContent = 'Racquet Complex · Closed for the Evening';
     document.getElementById('hlabel').textContent = "Tomorrow's Hours";
@@ -467,7 +425,6 @@ function renderNoDataState() {
     document.getElementById('ftrMsg').textContent = 'Refreshing court availability · Reserve via the BCC App or Pro Shop';
     banner.classList.remove('visible');
   }
-
   grid.style.gridTemplateColumns = '1fr';
   grid.innerHTML = `
     <div class="nodata-wrap">
@@ -493,12 +450,16 @@ async function loadAll() {
     const r = await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:NS})});
     if (!r.ok) throw new Error();
     const d = await r.json();
-    if (d.courts) courts = cleanData(d).courts;
-  } catch(e){ console.log('Court data unavailable'); }
+    if (d.courts) {
+      courts = cleanData(d).courts;
+      lastSuccessfulSync = Date.now(); // ← mark successful sync
+      updateSyncHealth();
+    }
+  } catch(e){
+    console.log('Court data unavailable');
+    updateSyncHealth(); // will show stale if threshold exceeded
+  }
 
-  // ── FIX: after-hours takes priority over everything.
-  // After CLOSE_HOUR or before OPEN_HOUR → always show "Courts Closed" panel,
-  // regardless of what Northstar returns. Also covers the zero-data case.
   if (isAfterHours() || !courts.length) {
     renderNoDataState();
     buildOverlay();
