@@ -503,5 +503,11 @@ function renderB() {
 loadAll();
 setInterval(loadAll, 60000);
 </script>
+<script>
+/* Fit the 1920x1080 layout to whatever screen the player uses */
+function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/1080);document.body.style.transformOrigin='top left';document.body.style.transform='scale('+s+')';}
+window.addEventListener('resize',fitScreen);fitScreen();
+</script>
+<style>html{overflow:hidden;background:#0B1A12;}</style>
 </body>
 </html>
