@@ -509,5 +509,10 @@ function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/10
 window.addEventListener('resize',fitScreen);fitScreen();
 </script>
 <style>html{overflow:hidden;background:#0B1A12;}</style>
-</body>
+<<script>
+function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/1080);document.body.style.transformOrigin='top left';document.body.style.transform='scale('+s+')';}
+window.addEventListener('resize',fitScreen);fitScreen();
+</script>
+<style>html{overflow:hidden;background:#0B1A12;}</style>
+</body>>
 </html>
