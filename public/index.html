@@ -509,10 +509,21 @@ function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/10
 window.addEventListener('resize',fitScreen);fitScreen();
 </script>
 <style>html{overflow:hidden;background:#0B1A12;}</style>
-<<script>
-function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/1080);document.body.style.transformOrigin='top left';document.body.style.transform='scale('+s+')';}
-window.addEventListener('resize',fitScreen);fitScreen();
+<script>
+/* Self-update: pick up new versions without rebooting the player.
+   Checks the published page every 5 minutes and reloads if it changed;
+   also reloads once a night at 3 AM as a fallback. */
+(function(){
+  var base=null;
+  function check(){
+    fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})
+      .then(function(r){return r.ok?r.text():null;})
+      .then(function(t){if(!t)return; if(base===null){base=t;return;} if(t!==base) location.reload();})
+      .catch(function(){});
+  }
+  check(); setInterval(check,5*60*1000);
+  setInterval(function(){var d=new Date(); if(d.getHours()===3&&d.getMinutes()<5) location.reload();},5*60*1000);
+})();
 </script>
-<style>html{overflow:hidden;background:#0B1A12;}</style>
-</body>>
+</body>
 </html>
