@@ -503,12 +503,29 @@ function renderB() {
 loadAll();
 setInterval(loadAll, 60000);
 </script>
+<style>html,body{overflow:hidden;background:#0B1A12;}#dbg{position:fixed;left:8px;bottom:8px;z-index:9999;background:#000;color:#0f0;font:20px monospace;padding:8px 12px;border:2px solid #0f0;display:none;}</style>
+<div id="dbg"></div>
 <script>
-/* Fit the 1920x1080 layout to whatever screen the player uses */
-function fitScreen(){var s=Math.min(window.innerWidth/1920,window.innerHeight/1080);document.body.style.transformOrigin='top left';document.body.style.transform='scale('+s+')';}
-window.addEventListener('resize',fitScreen);fitScreen();
+/* Fit the 1920x1080 layout to the player's real screen.
+   Uses the smallest size the player reports (some TV players report a
+   wider page than they actually show). Overrides for the field:
+   ?scale=0.85  force a size     ?debug=1  show the numbers on screen */
+var DISPLAY_VERSION='2026-10-20c';
+function fitScreen(){
+  var q=new URLSearchParams(location.search), vv=window.visualViewport;
+  var ws=[window.innerWidth,document.documentElement.clientWidth,screen.width,vv&&vv.width].filter(function(x){return x>0;});
+  var hs=[window.innerHeight,document.documentElement.clientHeight,screen.height,vv&&vv.height].filter(function(x){return x>0;});
+  var W=Math.min.apply(null,ws), H=Math.min.apply(null,hs);
+  var s=parseFloat(q.get('scale'))||Math.min(W/1920,H/1080,1);
+  document.body.style.transformOrigin='top left';
+  document.body.style.transform='scale('+s+')';
+  if(q.get('debug')==='1'){var d=document.getElementById('dbg');d.style.display='block';
+    d.textContent='v'+DISPLAY_VERSION+' | inner '+innerWidth+'x'+innerHeight+' | screen '+screen.width+'x'+screen.height+' | vv '+(vv?Math.round(vv.width)+'x'+Math.round(vv.height):'-')+' | dpr '+devicePixelRatio+' | scale '+s.toFixed(3);}
+}
+window.addEventListener('resize',fitScreen);
+if(window.visualViewport) visualViewport.addEventListener('resize',fitScreen);
+fitScreen(); setTimeout(fitScreen,1000); setTimeout(fitScreen,5000);
 </script>
-<style>html{overflow:hidden;background:#0B1A12;}</style>
 <script>
 /* Self-update: pick up new versions without rebooting the player.
    Checks the published page every 5 minutes and reloads if it changed;
